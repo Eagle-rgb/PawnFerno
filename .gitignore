@@ -1,7 +1,6 @@
-*
-
-!.gitignore
-!.cpp
-!.h
-!.md
-!/PawnFerno/PawnFernoEngine/
+.git
+PawnFerno/.vs
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user

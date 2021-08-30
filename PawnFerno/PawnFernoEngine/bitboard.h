@@ -24,36 +24,61 @@ constexpr BitBoard BB_FILEF = toBB(FILEF);
 constexpr BitBoard BB_FILEG = toBB(FILEG);
 constexpr BitBoard BB_FILEH = toBB(FILEH);
 
-/*const BitBoard RANKS_BB[8] = { 
-	0x00000000000000FF, 
-	0x000000000000FF00,
-	0x0000000000FF0000,
-	0x00000000FF000000,
-	0x000000FF00000000,
-	0x0000FF0000000000,
-	0x00FF000000000000,
-	0xFF00000000000000 };
+// Used for BitScan
+constexpr int lsb_64_table[64] = {
+   63, 30,  3, 32, 59, 14, 11, 33,
+   60, 24, 50,  9, 55, 19, 21, 34,
+   61, 29,  2, 53, 51, 23, 41, 18,
+   56, 28,  1, 43, 46, 27,  0, 35,
+   62, 31, 58,  4,  5, 49, 54,  6,
+   15, 52, 12, 40,  7, 42, 45, 16,
+   25, 57, 48, 13, 10, 39,  8, 44,
+   20, 47, 38, 22, 17, 37, 36, 26
+};
 
-const BitBoard FILES_BB[8] = {
-	0x0101010101010101,
-	0x0202020202020202,
-	0x0404040404040404,
-	0x0808080808080808,
-	0x1010101010101010,
-	0x2020202020202020,
-	0x4040404040404040,
-	0x8080808080808080 };*/
+// Generating BitBoards from Squares, Ranks, Files
+constexpr BitBoard toBB(Squares sq) {
+	return BB_a1 << sq;
+}
+constexpr BitBoard toBB(Ranks r) {
+	return BB_RANK1 << (8 * r);
+}
+constexpr BitBoard toBB(Files f) {
+	return BB_FILEA << f;
+}
 
-constexpr BitBoard toBB(Squares);
-constexpr BitBoard toBB(Ranks);
-constexpr BitBoard toBB(Files);
+// Get Rank, File from Square
+constexpr Ranks toRank(Squares sq){
+	return Ranks(sq / 8);
+}
+constexpr Files toFile(Squares sq){
+	return Files(sq % 8);
+}
 
-constexpr BitBoard shift(BitBoard, Directions);
+// Gets First occupied Square on BitBoard
+constexpr Squares toSquare(BitBoard bb){
+	return Squares(bitScanForward(bb));
+}
+constexpr Squares toSquare(Files f, Ranks r){
+	return Squares((8*r) + f);
+}
 
-BitBoard operator& (Squares sq, BitBoard b) {
+constexpr bool isEmpty(BitBoard bb){
+	return !bool(bb);
+}
+
+// Shift BitBoard by 1 square
+constexpr BitBoard shift(BitBoard b, Directions d) {
+	return d > 0 ? b << d : b >> -d;
+}
+
+inline BitBoard operator& (Squares sq, BitBoard b) {
 	return toBB(sq) & b;
 }
 
-inline BitBoard operator<<(BitBoard b, Directions d) {
-
+int bitScanForward(BitBoard bb) {
+   unsigned int folded;
+   bb ^= bb - 1;
+   folded = (int) bb ^ (bb >> 32);
+   return lsb_64_table[folded * 0x78291ACF >> 26];
 }

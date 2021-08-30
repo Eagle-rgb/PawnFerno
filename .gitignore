@@ -4,3 +4,6 @@ PawnFerno/.vs
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
+
+PawnFerno/Debug
+PawnFerno/PawnFernoEngine/Debug

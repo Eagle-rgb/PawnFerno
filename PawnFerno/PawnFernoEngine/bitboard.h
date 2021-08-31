@@ -64,7 +64,7 @@ constexpr Ranks toRank(Squares sq){
 	return Ranks(sq / 8);
 }
 constexpr Files toFile(Squares sq){
-	return Files(sq % 8);
+	return Files(sq & 7);
 }
 
 

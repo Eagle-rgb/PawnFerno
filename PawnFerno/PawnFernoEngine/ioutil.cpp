@@ -16,7 +16,6 @@ void print(BitBoard bb){
         for (int j = 0; j < 8; j++){
             cout << " " << bs[(7 - i) * 8 + j];
         }
-
         cout << endl;
     }
 }

@@ -1,11 +1,5 @@
 #include "ioutil.h"
 
-// For Testing Purposes
-BitBoard PAWN_PUSHES[2][64];
-BitBoard PAWN_CAPTURES[2][64];
-BitBoard KNIGHT_ATTACKS[64];
-BitBoard KING_ATTACKS[64];
-
 string toBitString(BitBoard bb) {
     string out = "";
     for (int i=0; i < 64; i++){
@@ -28,6 +22,13 @@ void print(BitBoard bb){
 int main() {
     BitBoardInit();
     print(PAWN_CAPTURES[0][SQb2]);
+
+    cout << endl;
+
+    BitBoard b = BB_RANK7;
+
+    print(BB_RANK7 & SQa7); cout << endl;
+    print(b &= SQa7);
 
     return 0;
 }

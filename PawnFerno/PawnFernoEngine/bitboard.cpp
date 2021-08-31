@@ -1,11 +1,16 @@
 #include "bitboard.h"
 
+BitBoard PAWN_PUSHES[2][64];
+BitBoard PAWN_CAPTURES[2][64];
+BitBoard KNIGHT_ATTACKS[64];
+BitBoard KING_ATTACKS[64];
+
 void BitBoardInit() {
-	for (Squares sq = SQa1; sq <= SQh8; sq++) {
+	for (Square sq = SQa1; sq <= SQh8; ++sq) {
 
 		// Pawn moves
 		// TODO: change to toRank() == sldkfjal�sf
-		if ((sq & BB_RANK1 | sq & BB_RANK8) != BB_EMPTY) {
+		if ((BB_RANK1 & sq | BB_RANK8 & sq) != BB_EMPTY) {
 			PAWN_PUSHES[WHITE][sq] = BB_EMPTY;
 			PAWN_PUSHES[BLACK][sq] = BB_EMPTY;
 			PAWN_CAPTURES[WHITE][sq] = BB_EMPTY;
@@ -13,14 +18,14 @@ void BitBoardInit() {
 			continue;
 		}
 
-		for (Colors c = WHITE; c <= BLACK; c = Colors(c + 1))
+		for (Color c = WHITE; c <= BLACK; ++c)
 		{
-			PAWN_PUSHES[c][sq] = shift(toBB(sq), PAWN_DIRECTIONS[c]);
-			PAWN_CAPTURES[c][sq] = shift(toBB(sq) & ~BB_FILEH, Directions(PAWN_DIRECTIONS[c] + EAST)) |
-				shift(toBB(sq) & ~BB_FILEA, Directions(PAWN_DIRECTIONS[c] + WEST));
+			PAWN_PUSHES[c][sq] = shift(sq, PAWN_DIRECTIONS[c]);
+			PAWN_CAPTURES[c][sq] = shift(~BB_FILEH & sq, Direction(PAWN_DIRECTIONS[c] + EAST)) |
+				shift(~BB_FILEA & sq, Direction(PAWN_DIRECTIONS[c] + WEST));
 
 			if (toRank(sq) == PAWN_DOUBLE_GO_FORWARD_ON_THE_CHESSBOARD_NON_EN_PASSANT_FOR_WHITE_AND_BLACK[c]) {
-				PAWN_PUSHES[c][sq] |= shiftBy(toBB(sq), PAWN_DIRECTIONS[c], 2);
+				PAWN_PUSHES[c][sq] |= shiftBy(sq, PAWN_DIRECTIONS[c], 2);
 			}
 		}
 

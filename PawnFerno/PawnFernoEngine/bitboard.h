@@ -1,8 +1,9 @@
 #pragma once
-#include "types.h"
 
 #ifndef BITBOARD_INCLUDE
 #define BITBOARD_INCLUDE
+
+#include "types.h"
 
 constexpr BitBoard BB_EMPTY = 0;
 constexpr BitBoard BB_FULL = ~BB_EMPTY;
@@ -27,8 +28,8 @@ constexpr BitBoard BB_FILEF = BB_FILEA << 5;
 constexpr BitBoard BB_FILEG = BB_FILEA << 6;
 constexpr BitBoard BB_FILEH = BB_FILEA << 7;
 
-constexpr Directions PAWN_DIRECTIONS[2] = { NORTH, SOUTH };
-constexpr Ranks PAWN_DOUBLE_GO_FORWARD_ON_THE_CHESSBOARD_NON_EN_PASSANT_FOR_WHITE_AND_BLACK[2] = { RANK2, RANK7 };
+constexpr Direction PAWN_DIRECTIONS[2] = { NORTH, SOUTH };
+constexpr Rank PAWN_DOUBLE_GO_FORWARD_ON_THE_CHESSBOARD_NON_EN_PASSANT_FOR_WHITE_AND_BLACK[2] = { RANK2, RANK7 };
 
 // Precalculated attack masks for pawns, knights and kings.
 extern BitBoard PAWN_PUSHES[2][64];
@@ -49,24 +50,23 @@ constexpr int lsb_64_table[64] = {
 };
 
 // Generating BitBoards from Squares, Ranks, Files
-constexpr BitBoard toBB(Squares sq) {
+constexpr BitBoard toBB(Square sq) {
 	return BB_a1 << sq;
 }
-constexpr BitBoard toBB(Ranks r) {
+constexpr BitBoard toBB(Rank r) {
 	return BB_RANK1 << (8 * r);
 }
-constexpr BitBoard toBB(Files f) {
+constexpr BitBoard toBB(File f) {
 	return BB_FILEA << f;
 }
 
 // Get Rank, File from Square
-constexpr Ranks toRank(Squares sq){
-	return Ranks(sq / 8);
+constexpr Rank toRank(Square sq) {
+	return Rank(sq / 8);
 }
-constexpr Files toFile(Squares sq){
-	return Files(sq & 7);
+constexpr File toFile(Square sq) {
+	return File(int(sq) & 7);
 }
-
 
 constexpr int bitScanForward(BitBoard bb) {
    unsigned int folded = 0;
@@ -76,11 +76,11 @@ constexpr int bitScanForward(BitBoard bb) {
 }
 
 // Gets First occupied Square on BitBoard
-constexpr Squares toSquare(BitBoard bb){
-	return Squares(bitScanForward(bb));
+constexpr Square toSquare(BitBoard bb){
+	return Square(bitScanForward(bb));
 }
-constexpr Squares toSquare(Files f, Ranks r){
-	return Squares((8*r) + f);
+constexpr Square toSquare(File f, Rank r){
+	return Square((8*r) + f);
 }
 
 constexpr bool isEmpty(BitBoard bb){
@@ -88,23 +88,35 @@ constexpr bool isEmpty(BitBoard bb){
 }
 
 // Shift BitBoard by 1 square
-constexpr BitBoard shift(BitBoard b, Directions d) {
+constexpr BitBoard shift(BitBoard b, Direction d) {
 	return d > 0 ? b << d : b >> -d;
 }
 
-constexpr BitBoard shiftBy(BitBoard b, Directions d, int amount) {
+constexpr BitBoard shiftBy(BitBoard b, Direction d, int amount) {
 	return d > 0 ? b << (amount * d) : b >> -(amount * d);
 }
 
-inline BitBoard operator& (Squares sq, BitBoard b) {
-	return toBB(sq) & b;
-}
-
-inline BitBoard operator^ (Squares sq, BitBoard b) {
-	return toBB(sq) ^ b;
-}
-
+constexpr BitBoard shift(Square sq, Direction d) { return shift(toBB(sq), d); }
+constexpr BitBoard shiftBy(Square sq, Direction d, int amount) { return shiftBy(toBB(sq), d, amount); }
 
 void BitBoardInit();
+
+#define ENABLE_BITBOARD_OPERATORS_ON(T) \
+constexpr BitBoard operator&(BitBoard b, T d) { return BitBoard(toBB(d) & b); }	\
+constexpr BitBoard operator|(BitBoard b, T d) { return BitBoard(toBB(d) | b); }	\
+constexpr BitBoard operator^(BitBoard b, T d) { return BitBoard(toBB(d) ^ b); }	\
+constexpr BitBoard operator&(T d, BitBoard b) { return BitBoard(toBB(d) & b); }	\
+constexpr BitBoard operator|(T d, BitBoard b) { return BitBoard(toBB(d) | b); }	\
+constexpr BitBoard operator^(T d, BitBoard b) { return BitBoard(toBB(d) ^ b); }	\
+constexpr BitBoard operator~(T d) { return ~toBB(d); }							\
+inline BitBoard& operator&=(BitBoard& b, T d) { return b = b & d; }				\
+inline BitBoard& operator|=(BitBoard& b, T d) { return b = b | d; }				\
+inline BitBoard& operator^=(BitBoard& b, T d) { return b = b ^ d; }				
+
+ENABLE_BITBOARD_OPERATORS_ON(Rank)
+ENABLE_BITBOARD_OPERATORS_ON(File)
+ENABLE_BITBOARD_OPERATORS_ON(Square)
+
+#undef ENABLE_BITBOARD_OPERATORS_ON
 
 #endif

@@ -16,8 +16,8 @@ void BitBoardInit() {
 		for (Colors c = WHITE; c <= BLACK; c = Colors(c + 1))
 		{
 			PAWN_PUSHES[c][sq] = shift(toBB(sq), PAWN_DIRECTIONS[c]);
-			PAWN_CAPTURES[c][sq] = shift(toBB(sq), Directions(PAWN_DIRECTIONS[c] + EAST)) |
-				shift(toBB(sq), Directions(PAWN_DIRECTIONS[c] + WEST));
+			PAWN_CAPTURES[c][sq] = shift(toBB(sq) & ~BB_FILEH, Directions(PAWN_DIRECTIONS[c] + EAST)) |
+				shift(toBB(sq) & ~BB_FILEA, Directions(PAWN_DIRECTIONS[c] + WEST));
 
 			if (toRank(sq) == PAWN_DOUBLE_GO_FORWARD_ON_THE_CHESSBOARD_NON_EN_PASSANT_FOR_WHITE_AND_BLACK[c]) {
 				PAWN_PUSHES[c][sq] |= shiftBy(toBB(sq), PAWN_DIRECTIONS[c], 2);

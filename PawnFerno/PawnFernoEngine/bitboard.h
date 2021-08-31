@@ -36,8 +36,6 @@ extern BitBoard PAWN_CAPTURES[2][64];
 extern BitBoard KNIGHT_ATTACKS[64];
 extern BitBoard KING_ATTACKS[64];
 
-void BitBoardInit();
-
 // Used for BitScan
 constexpr int lsb_64_table[64] = {
    63, 30,  3, 32, 59, 14, 11, 33,
@@ -105,5 +103,8 @@ inline BitBoard operator& (Squares sq, BitBoard b) {
 inline BitBoard operator^ (Squares sq, BitBoard b) {
 	return toBB(sq) ^ b;
 }
+
+
+void BitBoardInit();
 
 #endif

@@ -1,5 +1,10 @@
 #include "ioutil.h"
-#include <string>
+
+// For Testing Purposes
+BitBoard PAWN_PUSHES[2][64];
+BitBoard PAWN_CAPTURES[2][64];
+BitBoard KNIGHT_ATTACKS[64];
+BitBoard KING_ATTACKS[64];
 
 string toBitString(BitBoard bb) {
     string out = "";
@@ -22,7 +27,7 @@ void print(BitBoard bb){
 
 int main() {
     BitBoardInit();
-    print(BB_RANK1);
+    print(PAWN_CAPTURES[0][SQb2]);
 
     return 0;
 }

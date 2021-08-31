@@ -31,10 +31,10 @@ constexpr Directions PAWN_DIRECTIONS[2] = { NORTH, SOUTH };
 constexpr Ranks PAWN_DOUBLE_GO_FORWARD_ON_THE_CHESSBOARD_NON_EN_PASSANT_FOR_WHITE_AND_BLACK[2] = { RANK2, RANK7 };
 
 // Precalculated attack masks for pawns, knights and kings.
-BitBoard PAWN_PUSHES[2][64];
-BitBoard PAWN_CAPTURES[2][64];
-BitBoard KNIGHT_ATTACKS[64];
-BitBoard KING_ATTACKS[64];
+extern BitBoard PAWN_PUSHES[2][64];
+extern BitBoard PAWN_CAPTURES[2][64];
+extern BitBoard KNIGHT_ATTACKS[64];
+extern BitBoard KING_ATTACKS[64];
 
 void BitBoardInit();
 

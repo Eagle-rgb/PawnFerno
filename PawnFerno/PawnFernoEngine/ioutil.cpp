@@ -14,16 +14,16 @@ void print(BitBoard bb){
     string bs = toBitString(bb);
     for (int i = 0; i < 8; i++){
         for (int j = 0; j < 8; j++){
-
+            cout << " " << bs[(7 - i) * 8 + j];
         }
+
+        cout << endl;
     }
 }
 
 int main() {
     BitBoardInit();
-    // print(BB_FILEA);
-
-    cout << toBitString(BB_FILEA) << endl;
+    print(BB_RANK1);
 
     return 0;
 }

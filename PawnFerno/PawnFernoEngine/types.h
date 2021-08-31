@@ -18,8 +18,9 @@ enum Squares {
 	SQa8, SQb8, SQc8, SQd8, SQe8, SQf8, SQg8, SQh8
 };
 
-inline Squares operator++ (Squares sq) {
-	return Squares(sq + 1);
+inline Squares& operator++(Squares& sq) {
+	int a = sq;
+	return sq = Squares(++a);
 }
 inline Squares operator++(Squares& sq, int)
 {

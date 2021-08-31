@@ -30,6 +30,8 @@ constexpr BitBoard BB_FILEH = BB_FILEA << 7;
 
 constexpr Direction PAWN_DIRECTIONS[2] = { NORTH, SOUTH };
 constexpr Rank PAWN_DOUBLE_GO_FORWARD_ON_THE_CHESSBOARD_NON_EN_PASSANT_FOR_WHITE_AND_BLACK[2] = { RANK2, RANK7 };
+constexpr Rank PROMOTION_RANKS[2] = { RANK8, RANK1 };
+constexpr Rank ENPASSANT_RANKS[2] = { RANK5, RANK4 };
 
 // Precalculated attack masks for pawns, knights and kings.
 extern BitBoard PAWN_PUSHES[2][64];

@@ -28,7 +28,8 @@ int main() {
     BitBoard b = BB_RANK7;
 
     print(BB_RANK7 & SQa7); cout << endl;
-    print(b &= SQa7);
+    print(b &= SQa7); cout << endl;
+    print(KNIGHT_ATTACKS[SQe4]);
 
     return 0;
 }

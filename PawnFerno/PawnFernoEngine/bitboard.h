@@ -1,28 +1,31 @@
 #pragma once
 #include "types.h"
 
+#ifndef BITBOARD_INCLUDE
+#define BITBOARD_INCLUDE
+
 constexpr BitBoard BB_EMPTY = 0;
 constexpr BitBoard BB_FULL = ~BB_EMPTY;
 
 constexpr BitBoard BB_a1 = 1;
 
 constexpr BitBoard BB_RANK1 = 0xFF;
-constexpr BitBoard BB_RANK2 = toBB(RANK2);
-constexpr BitBoard BB_RANK3 = toBB(RANK3);
-constexpr BitBoard BB_RANK4 = toBB(RANK4);
-constexpr BitBoard BB_RANK5 = toBB(RANK5);
-constexpr BitBoard BB_RANK6 = toBB(RANK6);
-constexpr BitBoard BB_RANK7 = toBB(RANK7);
-constexpr BitBoard BB_RANK8 = toBB(RANK8);
+constexpr BitBoard BB_RANK2 = BB_RANK1 << 8;
+constexpr BitBoard BB_RANK3 = BB_RANK1 << (8*2);
+constexpr BitBoard BB_RANK4 = BB_RANK1 << (8*3);
+constexpr BitBoard BB_RANK5 = BB_RANK1 << (8*4);
+constexpr BitBoard BB_RANK6 = BB_RANK1 << (8*5);
+constexpr BitBoard BB_RANK7 = BB_RANK1 << (8*6);
+constexpr BitBoard BB_RANK8 = BB_RANK1 << (8*7);
 
 constexpr BitBoard BB_FILEA = 0x0101010101010101;
-constexpr BitBoard BB_FILEB = toBB(FILEB);
-constexpr BitBoard BB_FILEC = toBB(FILEC);
-constexpr BitBoard BB_FILED = toBB(FILED);
-constexpr BitBoard BB_FILEE = toBB(FILEE);
-constexpr BitBoard BB_FILEF = toBB(FILEF);
-constexpr BitBoard BB_FILEG = toBB(FILEG);
-constexpr BitBoard BB_FILEH = toBB(FILEH);
+constexpr BitBoard BB_FILEB = BB_FILEA << 1;
+constexpr BitBoard BB_FILEC = BB_FILEA << 2;
+constexpr BitBoard BB_FILED = BB_FILEA << 3;
+constexpr BitBoard BB_FILEE = BB_FILEA << 4;
+constexpr BitBoard BB_FILEF = BB_FILEA << 5;
+constexpr BitBoard BB_FILEG = BB_FILEA << 6;
+constexpr BitBoard BB_FILEH = BB_FILEA << 7;
 
 constexpr Directions PAWN_DIRECTIONS[2] = { NORTH, SOUTH };
 constexpr Ranks PAWN_DOUBLE_GO_FORWARD_ON_THE_CHESSBOARD_NON_EN_PASSANT_FOR_WHITE_AND_BLACK[2] = { RANK2, RANK7 };
@@ -33,7 +36,7 @@ BitBoard PAWN_CAPTURES[2][64];
 BitBoard KNIGHT_ATTACKS[64];
 BitBoard KING_ATTACKS[64];
 
-constexpr void BitBoardInit();
+void BitBoardInit();
 
 // Used for BitScan
 constexpr int lsb_64_table[64] = {
@@ -66,6 +69,14 @@ constexpr Files toFile(Squares sq){
 	return Files(sq % 8);
 }
 
+
+constexpr int bitScanForward(BitBoard bb) {
+   unsigned int folded = 0;
+   bb ^= bb - 1;
+   folded = (int) bb ^ (bb >> 32);
+   return lsb_64_table[folded * 0x78291ACF >> 26];
+}
+
 // Gets First occupied Square on BitBoard
 constexpr Squares toSquare(BitBoard bb){
 	return Squares(bitScanForward(bb));
@@ -91,9 +102,8 @@ inline BitBoard operator& (Squares sq, BitBoard b) {
 	return toBB(sq) & b;
 }
 
-int bitScanForward(BitBoard bb) {
-   unsigned int folded;
-   bb ^= bb - 1;
-   folded = (int) bb ^ (bb >> 32);
-   return lsb_64_table[folded * 0x78291ACF >> 26];
+inline BitBoard operator^ (Squares sq, BitBoard b) {
+	return toBB(sq) ^ b;
 }
+
+#endif

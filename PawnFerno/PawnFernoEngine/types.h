@@ -1,6 +1,10 @@
 #pragma once
 #include <cstdint>
 
+#ifndef TYPES_INCLUDE
+#define TYPES_INCLUDE
+
+
 typedef uint64_t BitBoard;
 
 enum Squares {
@@ -16,6 +20,12 @@ enum Squares {
 
 inline Squares operator++ (Squares sq) {
 	return Squares(sq + 1);
+}
+inline Squares operator++(Squares& sq, int)
+{
+  Squares tmp(sq);
+  ++sq;
+  return tmp;
 }
 
 inline Squares operator-- (Squares sq) {
@@ -49,3 +59,5 @@ enum Directions {
 enum Colors {
 	WHITE = 0, BLACK = 1
 };
+
+#endif

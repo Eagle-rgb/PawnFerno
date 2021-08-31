@@ -24,6 +24,17 @@ constexpr BitBoard BB_FILEF = toBB(FILEF);
 constexpr BitBoard BB_FILEG = toBB(FILEG);
 constexpr BitBoard BB_FILEH = toBB(FILEH);
 
+constexpr Directions PAWN_DIRECTIONS[2] = { NORTH, SOUTH };
+constexpr Ranks PAWN_DOUBLE_GO_FORWARD_ON_THE_CHESSBOARD_NON_EN_PASSANT_FOR_WHITE_AND_BLACK[2] = { RANK2, RANK7 };
+
+// Precalculated attack masks for pawns, knights and kings.
+BitBoard PAWN_PUSHES[2][64];
+BitBoard PAWN_CAPTURES[2][64];
+BitBoard KNIGHT_ATTACKS[64];
+BitBoard KING_ATTACKS[64];
+
+constexpr void BitBoardInit();
+
 // Used for BitScan
 constexpr int lsb_64_table[64] = {
    63, 30,  3, 32, 59, 14, 11, 33,
@@ -70,6 +81,10 @@ constexpr bool isEmpty(BitBoard bb){
 // Shift BitBoard by 1 square
 constexpr BitBoard shift(BitBoard b, Directions d) {
 	return d > 0 ? b << d : b >> -d;
+}
+
+constexpr BitBoard shiftBy(BitBoard b, Directions d, int amount) {
+	return d > 0 ? b << (amount * d) : b >> -(amount * d);
 }
 
 inline BitBoard operator& (Squares sq, BitBoard b) {

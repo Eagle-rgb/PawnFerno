@@ -4,15 +4,23 @@
 typedef uint64_t BitBoard;
 
 enum Squares {
-	a1, b1, c1, d1, e1, f1, g1, h1,
-	a2, b2, c2, d2, e2, f2, g2, h2,
-	a3, b3, c3, d3, e3, f3, g3, h3,
-	a4, b4, c4, d4, e4, f4, g4, h4,
-	a5, b5, c5, d5, e5, f5, g5, h5,
-	a6, b6, c6, d6, e6, f6, g6, h6,
-	a7, b7, c7, d7, e7, f7, g7, h7,
-	a8, b8, c8, d8, e8, f8, g8, h8
+	SQa1, SQb1, SQc1, SQd1, SQe1, SQf1, SQg1, SQh1,
+	SQa2, SQb2, SQc2, SQd2, SQe2, SQf2, SQg2, SQh2,
+	SQa3, SQb3, SQc3, SQd3, SQe3, SQf3, SQg3, SQh3,
+	SQa4, SQb4, SQc4, SQd4, SQe4, SQf4, SQg4, SQh4,
+	SQa5, SQb5, SQc5, SQd5, SQe5, SQf5, SQg5, SQh5,
+	SQa6, SQb6, SQc6, SQd6, SQe6, SQf6, SQg6, SQh6,
+	SQa7, SQb7, SQc7, SQd7, SQe7, SQf7, SQg7, SQh7,
+	SQa8, SQb8, SQc8, SQd8, SQe8, SQf8, SQg8, SQh8
 };
+
+inline Squares operator++ (Squares sq) {
+	return Squares(sq + 1);
+}
+
+inline Squares operator-- (Squares sq) {
+	return Squares(sq - 1);
+}
 
 enum Ranks {
 	RANK1, RANK2, RANK3, RANK4, RANK5, RANK6, RANK7, RANK8
@@ -36,4 +44,8 @@ enum Directions {
 	SOUTHWEST = SOUTH + WEST,
 	NORTHWEST = NORTH + WEST,
 	NORTHEAST = NORTH + EAST
+};
+
+enum Colors {
+	WHITE = 0, BLACK = 1
 };

@@ -1,9 +1,10 @@
 .git
-PawnFerno/.vs
 *.sln
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
 
 PawnFerno/Debug
+PawnFerno/.vs
+PawnFerno/PawnFernoEngine/.vs
 PawnFerno/PawnFernoEngine/Debug

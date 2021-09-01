@@ -19,17 +19,21 @@ void print(BitBoard bb){
     }
 }
 
+void print(Square sq) { print(toBB(sq)); }
+
 int main() {
     BitBoardInit();
-    print(PAWN_CAPTURES[0][SQb2]);
+    //print(PAWN_CAPTURES[0][SQb2]);
 
-    cout << endl;
+    //cout << endl;
 
     BitBoard b = BB_RANK7;
 
-    print(BB_RANK7 & SQa7); cout << endl;
-    print(b &= SQa7); cout << endl;
-    print(KNIGHT_ATTACKS[SQe4]);
+    //print(BB_RANK7 & SQa7); cout << endl;
+    //print(b &= SQa7); cout << endl;
+    //print(KNIGHT_ATTACKS[SQe4]); cout << endl;
+
+    print(RAYS[SQb2][directionIndex(SOUTHEAST)]);
 
     return 0;
 }

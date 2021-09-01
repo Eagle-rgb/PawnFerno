@@ -28,6 +28,12 @@ constexpr BitBoard BB_FILEF = BB_FILEA << 5;
 constexpr BitBoard BB_FILEG = BB_FILEA << 6;
 constexpr BitBoard BB_FILEH = BB_FILEA << 7;
 
+constexpr BitBoard BB_BORDER = BB_FILEA | BB_FILEH | BB_RANK1 | BB_RANK8;
+
+constexpr Direction DIRECTIONS[8] = { EAST, SOUTHEAST, SOUTH, SOUTHWEST, WEST, NORTHWEST, NORTH, NORTHEAST };
+constexpr BitBoard DIRECTION_LIMITS[8] = { BB_FILEH, BB_FILEH | BB_RANK1, BB_RANK1, BB_FILEA | BB_RANK1,
+	BB_FILEA, BB_FILEA | BB_RANK8, BB_RANK8, BB_FILEH | BB_RANK8 };
+
 constexpr Direction PAWN_DIRECTIONS[2] = { NORTH, SOUTH };
 constexpr Rank PAWN_DOUBLE_GO_FORWARD_ON_THE_CHESSBOARD_NON_EN_PASSANT_FOR_WHITE_AND_BLACK[2] = { RANK2, RANK7 };
 constexpr Rank PROMOTION_RANKS[2] = { RANK8, RANK1 };
@@ -38,6 +44,9 @@ extern BitBoard PAWN_PUSHES[2][64];
 extern BitBoard PAWN_CAPTURES[2][64];
 extern BitBoard KNIGHT_ATTACKS[64];
 extern BitBoard KING_ATTACKS[64];
+
+// Precalculated rays.
+extern BitBoard RAYS[64][8];
 
 // Used for BitScan
 constexpr int lsb_64_table[64] = {
@@ -75,6 +84,16 @@ constexpr int bitScanForward(BitBoard bb) {
    bb ^= bb - 1;
    folded = (int) bb ^ (bb >> 32);
    return lsb_64_table[folded * 0x78291ACF >> 26];
+}
+
+// Returns AND removes the lsb from the given bitboard (the bitboard WILL be changed).
+constexpr Square popLSB(BitBoard& bb) {
+	if (bb == BB_EMPTY)
+		return SQNONE;
+
+	Square sq = Square(bitScanForward(bb));
+	bb &= (bb - 1);
+	return sq;
 }
 
 // Gets First occupied Square on BitBoard

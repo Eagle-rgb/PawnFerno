@@ -43,10 +43,10 @@ void BitBoardInit() {
 		KNIGHT_ATTACKS[sq] = BB_EMPTY;
 		KNIGHT_ATTACKS[sq] |= (~(BB_RANK1 | BB_RANK2 | BB_FILEA) & sq) >> 17;
 		KNIGHT_ATTACKS[sq] |= (~(BB_RANK1 | BB_FILEA | BB_FILEB) & sq) >> 10;
-		KNIGHT_ATTACKS[sq] |= (~(BB_RANK8 | BB_FILEA | BB_FILEB) & sq) << 10;
-		KNIGHT_ATTACKS[sq] |= (~(BB_RANK7 | BB_RANK8 | BB_FILEA) & sq) << 17;
-		KNIGHT_ATTACKS[sq] |= (~(BB_RANK7 | BB_RANK8 | BB_FILEH) & sq) << 15;
-		KNIGHT_ATTACKS[sq] |= (~(BB_RANK8 | BB_FILEG | BB_FILEH) & sq) << 6;
+		KNIGHT_ATTACKS[sq] |= (~(BB_RANK8 | BB_FILEA | BB_FILEB) & sq) << 6;
+		KNIGHT_ATTACKS[sq] |= (~(BB_RANK7 | BB_RANK8 | BB_FILEA) & sq) << 15;
+		KNIGHT_ATTACKS[sq] |= (~(BB_RANK7 | BB_RANK8 | BB_FILEH) & sq) << 17;
+		KNIGHT_ATTACKS[sq] |= (~(BB_RANK8 | BB_FILEG | BB_FILEH) & sq) << 10;
 		KNIGHT_ATTACKS[sq] |= (~(BB_RANK1 | BB_FILEG | BB_FILEH) & sq) >> 6;
 		KNIGHT_ATTACKS[sq] |= (~(BB_RANK1 | BB_RANK2 | BB_FILEH) & sq) >> 15;
 

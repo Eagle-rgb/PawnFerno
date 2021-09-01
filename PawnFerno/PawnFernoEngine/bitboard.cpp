@@ -7,7 +7,15 @@ BitBoard KING_ATTACKS[64];
 
 BitBoard RAYS[64][8];
 
+int ms1bTable[511];
+
 void BitBoardInit() {
+	// Initializing msb table.
+	ms1bTable[0] = 0;
+	for (int i = 0; i < 8; i++)
+		for (int j = std::pow(2, i); j <= std::pow(2, i + 1) - 1; j++)
+			ms1bTable[j] = i;
+
 	for (Square sq = SQa1; sq <= SQh8; ++sq) {
 
 		// Pawn moves

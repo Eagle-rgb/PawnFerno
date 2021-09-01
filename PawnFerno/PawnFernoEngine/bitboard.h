@@ -4,6 +4,7 @@
 #define BITBOARD_INCLUDE
 
 #include "types.h"
+#include <cmath>
 
 constexpr BitBoard BB_EMPTY = 0;
 constexpr BitBoard BB_FULL = ~BB_EMPTY;
@@ -60,6 +61,8 @@ constexpr int lsb_64_table[64] = {
    20, 47, 38, 22, 17, 37, 36, 26
 };
 
+extern int ms1bTable[511];
+
 // Generating BitBoards from Squares, Ranks, Files
 constexpr BitBoard toBB(Square sq) {
 	return BB_a1 << sq;
@@ -84,6 +87,23 @@ constexpr int bitScanForward(BitBoard bb) {
    bb ^= bb - 1;
    folded = (int) bb ^ (bb >> 32);
    return lsb_64_table[folded * 0x78291ACF >> 26];
+}
+
+constexpr int bitScanBackward(BitBoard bb) {
+	int result = 0;
+	if (bb > 0xFFFFFFFF) {
+		bb >>= 32;
+		result = 32;
+	}
+	if (bb > 0xFFFF) {
+		bb >>= 16;
+		result += 16;
+	}
+	if (bb > 0xFF) {
+		bb >>= 8;
+		result += 8;
+	}
+	return result + ms1bTable[bb];
 }
 
 // Returns AND removes the lsb from the given bitboard (the bitboard WILL be changed).

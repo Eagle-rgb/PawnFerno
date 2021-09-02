@@ -4,6 +4,10 @@
 
 #include <cstdint>
 
+// Direction + 9 and then lookup in this array yields the appropriate direction index.
+// -1 means no direction reaches this value.
+constexpr int DIRECTION_INDEXES[19] = { 3, 2, 1, -1, -1, -1, -1, -1, 4, -1, 0, -1, -1, -1, -1, -1, 5, 6, 7 };
+
 typedef uint64_t BitBoard;
 
 enum Square {

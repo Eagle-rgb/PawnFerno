@@ -35,6 +35,9 @@ constexpr Direction DIRECTIONS[8] = { EAST, SOUTHEAST, SOUTH, SOUTHWEST, WEST, N
 constexpr BitBoard DIRECTION_LIMITS[8] = { BB_FILEH, BB_FILEH | BB_RANK1, BB_RANK1, BB_FILEA | BB_RANK1,
 	BB_FILEA, BB_FILEA | BB_RANK8, BB_RANK8, BB_FILEH | BB_RANK8 };
 
+constexpr Direction BISHOP_DIRECTIONS[4] = { SOUTHEAST, SOUTHWEST, NORTHWEST, NORTHEAST };
+constexpr Direction ROOK_DIRECTIONS[4] = { EAST, SOUTH, WEST, NORTH };
+
 constexpr Direction PAWN_DIRECTIONS[2] = { NORTH, SOUTH };
 constexpr Rank PAWN_DOUBLE_GO_FORWARD_ON_THE_CHESSBOARD_NON_EN_PASSANT_FOR_WHITE_AND_BLACK[2] = { RANK2, RANK7 };
 constexpr Rank PROMOTION_RANKS[2] = { RANK8, RANK1 };
@@ -146,6 +149,9 @@ constexpr BitBoard shift(Square sq, Direction d) { return shift(toBB(sq), d); }
 constexpr BitBoard shiftBy(Square sq, Direction d, int amount) { return shiftBy(toBB(sq), d, amount); }
 
 void BitBoardInit();
+BitBoard pseudoLegalBishop(Square, BitBoard);
+BitBoard pseudoLegalRook(Square, BitBoard);
+BitBoard tillFirstBlocker(Square, BitBoard, Direction);
 
 #define ENABLE_BITBOARD_OPERATORS_ON(T) \
 constexpr BitBoard operator&(BitBoard b, T d) { return BitBoard(toBB(d) & b); }	\

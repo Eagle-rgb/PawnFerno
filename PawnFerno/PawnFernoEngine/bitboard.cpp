@@ -91,3 +91,31 @@ void BitBoardInit() {
 	}
 }
 
+BitBoard pseudoLegalBishop(Square from, BitBoard blockers) {
+	BitBoard pseudoLegals = BB_EMPTY;
+
+	for (int i = 0; i < 4; i++)
+		pseudoLegals |= tillFirstBlocker(from, blockers, BISHOP_DIRECTIONS[i]);
+
+	return pseudoLegals;
+}
+
+BitBoard pseudoLegalRook(Square from, BitBoard blockers) {
+	BitBoard pseudoLegals = BB_EMPTY;
+
+	for (int i = 0; i < 4; i++)
+		pseudoLegals |= tillFirstBlocker(from, blockers, ROOK_DIRECTIONS[i]);
+
+	return pseudoLegals;
+}
+
+BitBoard tillFirstBlocker(Square from, BitBoard blockers, Direction d) {
+	BitBoard rayMask = RAYS[from][directionIndex(d)];
+	BitBoard blockerCollision = rayMask & blockers;
+
+	if (blockerCollision == BB_EMPTY) return rayMask;
+
+	Square firstCollision = Square(d > 0 ? bits::bitScanForward(blockerCollision) : bits::bitScanBackward(blockerCollision));
+	return rayMask ^ RAYS[firstCollision][directionIndex(d)];
+}
+

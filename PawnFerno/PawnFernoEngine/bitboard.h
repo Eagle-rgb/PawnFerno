@@ -148,10 +148,10 @@ constexpr BitBoard shiftBy(BitBoard b, Direction d, int amount) {
 constexpr BitBoard shift(Square sq, Direction d) { return shift(toBB(sq), d); }
 constexpr BitBoard shiftBy(Square sq, Direction d, int amount) { return shiftBy(toBB(sq), d, amount); }
 
-void BitBoardInit();
-BitBoard pseudoLegalBishop(Square, BitBoard);
-BitBoard pseudoLegalRook(Square, BitBoard);
-BitBoard tillFirstBlocker(Square, BitBoard, Direction);
+constexpr void BitBoardInit();
+constexpr BitBoard pseudoLegalBishop(Square, BitBoard);
+constexpr BitBoard pseudoLegalRook(Square, BitBoard);
+constexpr BitBoard tillFirstBlocker(Square, BitBoard, Direction);
 
 #define ENABLE_BITBOARD_OPERATORS_ON(T) \
 constexpr BitBoard operator&(BitBoard b, T d) { return BitBoard(toBB(d) & b); }	\

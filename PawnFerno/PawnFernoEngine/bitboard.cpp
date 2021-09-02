@@ -11,7 +11,7 @@ namespace bits {
 	int ms1bTable[511];
 }
 
-void BitBoardInit() {
+constexpr void BitBoardInit() {
 	// Initializing msb table.
 	bits::ms1bTable[0] = 0;
 	for (int i = 0; i < 8; i++)
@@ -91,7 +91,7 @@ void BitBoardInit() {
 	}
 }
 
-BitBoard pseudoLegalBishop(Square from, BitBoard blockers) {
+constexpr BitBoard pseudoLegalBishop(Square from, BitBoard blockers) {
 	BitBoard pseudoLegals = BB_EMPTY;
 
 	for (int i = 0; i < 4; i++)
@@ -100,7 +100,7 @@ BitBoard pseudoLegalBishop(Square from, BitBoard blockers) {
 	return pseudoLegals;
 }
 
-BitBoard pseudoLegalRook(Square from, BitBoard blockers) {
+constexpr BitBoard pseudoLegalRook(Square from, BitBoard blockers) {
 	BitBoard pseudoLegals = BB_EMPTY;
 
 	for (int i = 0; i < 4; i++)
@@ -109,7 +109,7 @@ BitBoard pseudoLegalRook(Square from, BitBoard blockers) {
 	return pseudoLegals;
 }
 
-BitBoard tillFirstBlocker(Square from, BitBoard blockers, Direction d) {
+constexpr BitBoard tillFirstBlocker(Square from, BitBoard blockers, Direction d) {
 	BitBoard rayMask = RAYS[from][directionIndex(d)];
 	BitBoard blockerCollision = rayMask & blockers;
 

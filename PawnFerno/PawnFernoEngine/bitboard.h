@@ -49,19 +49,57 @@ extern BitBoard KING_ATTACKS[64];
 // Precalculated rays.
 extern BitBoard RAYS[64][8];
 
-// Used for BitScan
-constexpr int lsb_64_table[64] = {
-   63, 30,  3, 32, 59, 14, 11, 33,
-   60, 24, 50,  9, 55, 19, 21, 34,
-   61, 29,  2, 53, 51, 23, 41, 18,
-   56, 28,  1, 43, 46, 27,  0, 35,
-   62, 31, 58,  4,  5, 49, 54,  6,
-   15, 52, 12, 40,  7, 42, 45, 16,
-   25, 57, 48, 13, 10, 39,  8, 44,
-   20, 47, 38, 22, 17, 37, 36, 26
-};
+namespace bits
+{
+	// Used for BitScan
+	constexpr int lsb_64_table[64] = {
+	   63, 30,  3, 32, 59, 14, 11, 33,
+	   60, 24, 50,  9, 55, 19, 21, 34,
+	   61, 29,  2, 53, 51, 23, 41, 18,
+	   56, 28,  1, 43, 46, 27,  0, 35,
+	   62, 31, 58,  4,  5, 49, 54,  6,
+	   15, 52, 12, 40,  7, 42, 45, 16,
+	   25, 57, 48, 13, 10, 39,  8, 44,
+	   20, 47, 38, 22, 17, 37, 36, 26
+	};
 
-extern int ms1bTable[511];
+	extern int ms1bTable[511];
+
+	constexpr int bitScanForward(BitBoard bb) {
+		unsigned int folded = 0;
+		bb ^= bb - 1;
+		folded = (int)bb ^ (bb >> 32);
+		return lsb_64_table[folded * 0x78291ACF >> 26];
+	}
+
+	// Divide and Conquer approach for determining the MS1B.
+	constexpr int bitScanBackward(BitBoard bb) {
+		int result = 0;
+		if (bb > 0xFFFFFFFF) {
+			bb >>= 32;
+			result = 32;
+		}
+		if (bb > 0xFFFF) {
+			bb >>= 16;
+			result += 16;
+		}
+		if (bb > 0xFF) {
+			bb >>= 8;
+			result += 8;
+		}
+		return result + ms1bTable[bb];
+	}
+
+	// Returns AND removes the lsb from the given bitboard (the bitboard WILL be changed).
+	constexpr Square popLSB(BitBoard& bb) {
+		if (bb == BB_EMPTY)
+			return SQNONE;
+
+		Square sq = Square(bitScanForward(bb));
+		bb &= (bb - 1);
+		return sq;
+	}
+}
 
 // Generating BitBoards from Squares, Ranks, Files
 constexpr BitBoard toBB(Square sq) {
@@ -82,44 +120,11 @@ constexpr File toFile(Square sq) {
 	return File(int(sq) & 7);
 }
 
-constexpr int bitScanForward(BitBoard bb) {
-   unsigned int folded = 0;
-   bb ^= bb - 1;
-   folded = (int) bb ^ (bb >> 32);
-   return lsb_64_table[folded * 0x78291ACF >> 26];
-}
-
-constexpr int bitScanBackward(BitBoard bb) {
-	int result = 0;
-	if (bb > 0xFFFFFFFF) {
-		bb >>= 32;
-		result = 32;
-	}
-	if (bb > 0xFFFF) {
-		bb >>= 16;
-		result += 16;
-	}
-	if (bb > 0xFF) {
-		bb >>= 8;
-		result += 8;
-	}
-	return result + ms1bTable[bb];
-}
-
-// Returns AND removes the lsb from the given bitboard (the bitboard WILL be changed).
-constexpr Square popLSB(BitBoard& bb) {
-	if (bb == BB_EMPTY)
-		return SQNONE;
-
-	Square sq = Square(bitScanForward(bb));
-	bb &= (bb - 1);
-	return sq;
-}
-
 // Gets First occupied Square on BitBoard
 constexpr Square toSquare(BitBoard bb){
-	return Square(bitScanForward(bb));
+	return Square(bits::bitScanForward(bb));
 }
+
 constexpr Square toSquare(File f, Rank r){
 	return Square((8*r) + f);
 }

@@ -10,4 +10,7 @@ Position::Position() {
 	BB_pieces[ROOK] = toBB(SQa1) | toBB(SQa8) | toBB(SQh1) | toBB(SQh8);
 	BB_pieces[QUEEN] = toBB(SQd1) | toBB(SQd8);
 	BB_pieces[KING] = toBB(SQe1) | toBB(SQe8);
+
+	castlingRights = 15;
+	enPassant = SQNONE;
 }

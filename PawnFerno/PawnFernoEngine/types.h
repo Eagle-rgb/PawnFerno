@@ -53,6 +53,16 @@ enum Color {
 	BLACK = 1
 };
 
+namespace castling {
+	enum Castling {
+		None = 0,
+		K = 0b1,
+		Q = 0b10,
+		k = 0b100,
+		q = 0b1000
+	};
+}
+
 int directionIndex(Direction);
 
 #define ENABLE_ADD_OPERATORS_ON(T)												\

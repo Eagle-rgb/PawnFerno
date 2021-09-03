@@ -33,7 +33,9 @@ int main() {
     //print(b &= SQa7); cout << endl;
     //print(KNIGHT_ATTACKS[SQe4]); cout << endl;
 
-    print(RAYS[SQb2][directionIndex(SOUTHEAST)]);
+    // print(RAYS[SQb2][directionIndex(SOUTHEAST)]); cout << endl;
+    print(pseudoLegalBishop(SQe3, BB_RANK5 | BB_FILEG)); cout << endl;
+
 
     return 0;
 }

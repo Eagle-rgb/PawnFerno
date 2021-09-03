@@ -1,5 +1,6 @@
-#include "chessboard.h"
-Chessboard::Chessboard() {
+#include "position.h"
+
+Position::Position() {
 	BB_wb[WHITE] = BB_RANK1 | BB_RANK2;
 	BB_wb[BLACK] = BB_RANK7 | BB_RANK8;
 

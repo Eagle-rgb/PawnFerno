@@ -34,7 +34,18 @@ int main() {
     //print(KNIGHT_ATTACKS[SQe4]); cout << endl;
 
     // print(RAYS[SQb2][directionIndex(SOUTHEAST)]); cout << endl;
-    print(pseudoLegalBishop(SQe3, BB_RANK5 | BB_FILEG)); cout << endl;
+    //print(pseudoLegalBishop(SQe3, BB_RANK5 | BB_FILEG)); cout << endl;
+
+    string board = toCharBB(misc::split("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", '/'));
+    
+    for (int i = 7; i >= 0; i--) {
+        for (int j = 0; j < 8; j++) {
+            cout << board[8 * i + j];
+        }
+
+        cout << endl;
+    }
+
 
 
     return 0;

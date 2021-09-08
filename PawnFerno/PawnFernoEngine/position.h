@@ -4,14 +4,18 @@
 #define POSITION_INCLUDE
 
 #include "bitboard.h"
+#include "fen.h"
+#include <string>
 class Position {
 private:
-	BitBoard wbBB[2];
-	BitBoard piecesBB[6];
+	BitBoard BB_wb[2];
+	BitBoard BB_pieces[6];
 	int castlingRights;
 	Square enPassant;
 
 public:
+	Position();
+	Position(std::string fen);
 
 };
 

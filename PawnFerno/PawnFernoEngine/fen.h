@@ -3,8 +3,11 @@
 #ifndef FEN_INCLUDED
 #define FEN_INCLUDED
 
-#include <string>
+#include "misc.h"
+#include <assert.h>
 
 using namespace std;
-string toCharBB(string);
+constexpr char pieceChars[12] = { 'K', 'Q', 'R', 'B', 'N', 'P', 'k', 'q', 'r', 'b', 'n', 'p' };
+
+string toCharBB(vector<string> boardParts);
 #endif

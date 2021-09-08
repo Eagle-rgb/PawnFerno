@@ -14,3 +14,8 @@ Position::Position() {
 	castlingRights = 15;
 	enPassant = SQNONE;
 }
+
+Position::Position(string fen) {
+	// TODO
+	Position();
+}

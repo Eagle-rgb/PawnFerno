@@ -1,52 +1,43 @@
 #include "ioutil.h"
 
-string toBitString(BitBoard bb) {
-    string out = "";
-    for (int i=0; i < 64; i++){
-        out += to_string(bb & 1);
-        bb >>= 1;
-    }
-    return out;
-}
-
-void print(BitBoard bb){
-    string bs = toBitString(bb);
-    for (int i = 0; i < 8; i++){
-        for (int j = 0; j < 8; j++){
-            cout << " " << bs[(7 - i) * 8 + j];
+namespace printing {
+    string toBitString(BitBoard bb) {
+        string out = "";
+        for (int i = 0; i < 64; i++) {
+            out += to_string(bb & 1);
+            bb >>= 1;
         }
-        cout << endl;
+        return out;
     }
-}
 
-void print(Square sq) { print(toBB(sq)); }
+    void print(BitBoard bb) {
+        string bs = toBitString(bb);
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                cout << " " << bs[(7 - i) * 8 + j];
+            }
+            cout << endl;
+        }
+    }
 
-int main() {
-    BitBoardInit();
-    //print(PAWN_CAPTURES[0][SQb2]);
+    void print(Square sq) { print(toBB(sq)); }
 
-    //cout << endl;
+    void printBoard(const string charBB) {
+        for (int i = 7; i >= 0; i--) {
+            cout << rankChar(Rank(i)) << " | ";
 
-    BitBoard b = BB_RANK7;
+            for (int j = 0; j < 7; j++) {
+                cout << charBB[8 * i + j] << " ";
+            }
 
-    //print(BB_RANK7 & SQa7); cout << endl;
-    //print(b &= SQa7); cout << endl;
-    //print(KNIGHT_ATTACKS[SQe4]); cout << endl;
-
-    // print(RAYS[SQb2][directionIndex(SOUTHEAST)]); cout << endl;
-    //print(pseudoLegalBishop(SQe3, BB_RANK5 | BB_FILEG)); cout << endl;
-
-    string board = toCharBB(misc::split("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", '/'));
-    
-    for (int i = 7; i >= 0; i--) {
-        for (int j = 0; j < 8; j++) {
-            cout << board[8 * i + j];
+            cout << charBB[8 * i + 7] << endl;
         }
 
-        cout << endl;
+        cout << "   ----------------" << endl << "    ";
+
+        for (auto _ = 0; _ < 7; _++)
+            cout << fileChar(File(_)) << " ";
+
+        cout << fileChar(File(7)) << endl;
     }
-
-
-
-    return 0;
 }

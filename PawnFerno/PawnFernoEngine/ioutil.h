@@ -6,4 +6,9 @@
 
 using namespace std;
 
-void print(BitBoard);
+namespace printing {
+	string toBitString(BitBoard);
+	void print(BitBoard);
+	void print(Square);
+	void printBoard(string);
+}

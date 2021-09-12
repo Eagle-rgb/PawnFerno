@@ -21,4 +21,12 @@ namespace misc {
 
 		return output;
 	}
+
+	bool contains(string TArr, char t) {
+		for (auto tx : TArr) {
+			if (t == tx) return true;
+		}
+
+		return false;
+	}
 }

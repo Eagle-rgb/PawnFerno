@@ -128,10 +128,6 @@ constexpr Square toSquare(BitBoard bb){
 	return Square(bits::bitScanForward(bb));
 }
 
-constexpr Square toSquare(File f, Rank r){
-	return Square((8*r) + f);
-}
-
 constexpr bool isEmpty(BitBoard bb){
 	return !bool(bb);
 }

@@ -7,6 +7,8 @@
 // Direction + 9 and then lookup in this array yields the appropriate direction index.
 // -1 means no direction reaches this value.
 constexpr int DIRECTION_INDEXES[19] = { 3, 2, 1, -1, -1, -1, -1, -1, 4, -1, 0, -1, -1, -1, -1, -1, 5, 6, 7 };
+constexpr char RANK_CHARS[15] = { '1', '2', '3', '4', '5', '6', '7', '8', ' ', ' ', ' ', ' ', ' ', ' ', ' ' };
+constexpr char FILE_CHARS[15] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', ' ', ' ', ' ', ' ', ' ', ' ', ' ' };
 
 typedef uint64_t BitBoard;
 
@@ -63,7 +65,34 @@ namespace castling {
 	};
 }
 
-int directionIndex(Direction);
+constexpr int directionIndex(Direction d) {
+	return DIRECTION_INDEXES[d + 9];
+}
+
+constexpr Square toSquare(File f, Rank r) {
+	return Square((8 * r) + f);
+}
+
+constexpr PieceType toPieceType(char pt) {
+	pt = pt - 'A' + 'a';
+
+	switch (pt) {
+	case 'k': return KING;
+	case 'q': return QUEEN;
+	case 'r': return ROOK;
+	case 'p': return PAWN;
+	case 'n': return KNIGHT;
+	default: return PIECENONE;
+	}
+}
+
+constexpr char rankChar(Rank r) {
+	return RANK_CHARS[(int)r];
+}
+
+constexpr char fileChar(File f) {
+	return FILE_CHARS[(int)f];
+}
 
 #define ENABLE_ADD_OPERATORS_ON(T)												\
 constexpr T operator+(T d1, int d2) { return T(int(d1) + d2); }					\
@@ -82,6 +111,7 @@ inline T& operator--(T& d) { return d = T(int(d) - 1); }
 ENABLE_BASE_OPERATORS_ON(Direction)
 
 ENABLE_ADD_OPERATORS_ON(Square)
+ENABLE_ADD_OPERATORS_ON(castling::Castling)
 
 ENABLE_INCR_OPERATORS_ON(PieceType)
 ENABLE_INCR_OPERATORS_ON(Square)

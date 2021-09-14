@@ -7,15 +7,17 @@
 #include "ioutil.h"
 #include "fen.h"
 #include "move.h"
+#include "state.h"
+#include <vector>
 #include <string>
 
 class Position {
-public:
+private:
 	BitBoard BB_wb[2];
 	BitBoard BB_pieces[6];
-	Color player;
-	int castlingRights;
-	Square enPassant;
+	State state = State();
+
+	std::vector<Move> legalMoves;
 
 public:
 	Position();
@@ -47,6 +49,11 @@ public:
 	/// Makes the given move on the board.
 	/// </summary>
 	void makeMove(const Move);
+
+	/// <summary>
+	/// Undo's the given move.
+	/// </summary>
+	void undoMove(const Move);
 
 	/// <summary>
 	/// Returns a character-string like in FEN but without the '/' and with spaces for no pieces.

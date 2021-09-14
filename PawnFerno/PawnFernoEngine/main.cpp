@@ -5,8 +5,6 @@ int main() {
 
 	Position p(startPosFen);
 
-	std::cout << printing::print(p.BB_pieces[0]);
-
 	std::cout << p.print();
 
 	

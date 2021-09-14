@@ -130,6 +130,8 @@ constexpr char fileChar(File f) {
 	return FILE_CHARS[(int)f];
 }
 
+
+
 #define ENABLE_ADD_OPERATORS_ON(T)												\
 inline T operator+(T d1, int d2) { return T(int(d1) + d2); }					\
 inline T& operator+=(T& d1, int d2) { return d1 = d1 + d2; }

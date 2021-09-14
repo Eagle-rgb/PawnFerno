@@ -5,9 +5,8 @@
 #include <string>
 #include <vector>
 
-using namespace std;
-
 namespace misc {
+	using namespace std;
 	vector<string> split(string, char);
 
 	constexpr bool isNumeric(char c) {

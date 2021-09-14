@@ -9,8 +9,12 @@
 constexpr int DIRECTION_INDEXES[19] = { 3, 2, 1, -1, -1, -1, -1, -1, 4, -1, 0, -1, -1, -1, -1, -1, 5, 6, 7 };
 constexpr char RANK_CHARS[15] = { '1', '2', '3', '4', '5', '6', '7', '8', ' ', ' ', ' ', ' ', ' ', ' ', ' ' };
 constexpr char FILE_CHARS[15] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', ' ', ' ', ' ', ' ', ' ', ' ', ' ' };
+constexpr char PIECE_CHARS[8] = { 'p', 'n', 'b', 'r', 'q', 'k', ' ', ' ' };
 
 typedef uint64_t BitBoard;
+
+// First 5 bits are the origin square, next 5 bits are the destination square.
+typedef short Move;
 
 enum Square {
 	SQa1, SQb1, SQc1, SQd1, SQe1, SQf1, SQg1, SQh1,
@@ -55,15 +59,13 @@ enum Color {
 	BLACK = 1
 };
 
-namespace castling {
-	enum Castling {
-		None = 0,
-		K = 0b1,
-		Q = 0b10,
-		k = 0b100,
-		q = 0b1000
-	};
-}
+enum class Castling {
+	None = 0,
+	K = 0b1,
+	Q = 0b10,
+	k = 0b100,
+	q = 0b1000
+};
 
 constexpr int directionIndex(Direction d) {
 	return DIRECTION_INDEXES[d + 9];
@@ -74,16 +76,22 @@ constexpr Square toSquare(File f, Rank r) {
 }
 
 constexpr PieceType toPieceType(char pt) {
-	pt = pt - 'A' + 'a';
+	pt = pt < 'a' ? pt - 'A' + 'a' : pt;
 
 	switch (pt) {
 	case 'k': return KING;
 	case 'q': return QUEEN;
 	case 'r': return ROOK;
 	case 'p': return PAWN;
+	case 'b': return BISHOP;
 	case 'n': return KNIGHT;
 	default: return PIECENONE;
 	}
+}
+
+// Returns the appropriate piece character for the given piece.
+constexpr char toChar(PieceType pt, Color who) {
+	return pt == PIECENONE ? ' ' : 32 * (int)who + PIECE_CHARS[pt] - 32;
 }
 
 constexpr char rankChar(Rank r) {
@@ -111,7 +119,7 @@ inline T& operator--(T& d) { return d = T(int(d) - 1); }
 ENABLE_BASE_OPERATORS_ON(Direction)
 
 ENABLE_ADD_OPERATORS_ON(Square)
-ENABLE_ADD_OPERATORS_ON(castling::Castling)
+ENABLE_ADD_OPERATORS_ON(Castling)
 
 ENABLE_INCR_OPERATORS_ON(PieceType)
 ENABLE_INCR_OPERATORS_ON(Square)

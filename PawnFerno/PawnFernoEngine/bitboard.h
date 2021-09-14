@@ -132,6 +132,11 @@ constexpr bool isEmpty(BitBoard bb){
 	return !bool(bb);
 }
 
+// Checks if the given Square is empty.
+constexpr bool isFree(BitBoard bb, Square s) {
+	return isEmpty(bb & toBB(s));
+}
+
 // Shift BitBoard by 1 square
 constexpr BitBoard shift(BitBoard b, Direction d) {
 	return d > 0 ? b << d : b >> -d;
@@ -150,7 +155,7 @@ BitBoard pseudoLegalRook(Square, BitBoard);
 BitBoard pseudoLegalQueen(Square, BitBoard);
 BitBoard tillFirstBlocker(Square, BitBoard, Direction);
 
-#define ENABLE_BITBOARD_OPERATORS_ON(T) \
+/*#define ENABLE_BITBOARD_OPERATORS_ON(T) \
 constexpr BitBoard operator&(BitBoard b, T d) { return BitBoard(toBB(d) & b); }	\
 constexpr BitBoard operator|(BitBoard b, T d) { return BitBoard(toBB(d) | b); }	\
 constexpr BitBoard operator^(BitBoard b, T d) { return BitBoard(toBB(d) ^ b); }	\
@@ -166,6 +171,6 @@ ENABLE_BITBOARD_OPERATORS_ON(Rank)
 ENABLE_BITBOARD_OPERATORS_ON(File)
 ENABLE_BITBOARD_OPERATORS_ON(Square)
 
-#undef ENABLE_BITBOARD_OPERATORS_ON
+#undef ENABLE_BITBOARD_OPERATORS_ON*/
 
 #endif

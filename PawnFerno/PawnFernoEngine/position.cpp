@@ -16,30 +16,29 @@ Position::Position() {
 	enPassant = SQNONE;
 }
 
-Position::Position(string fen) {
+Position::Position(std::string fen) {
 	// Initialization, default values.
 	clear();
-	vector<string> fenParts = misc::split(fen, ' ');
+	std::vector<std::string> fenParts = misc::split(fen, ' ');
 
-	vector<string>::iterator it = fenParts.begin();
+	std::vector<std::string>::iterator it = fenParts.begin();
 
 	// Board
-	string charBB = fen::toCharBB(misc::split(*it, '/'));
-	int i = 7;
-	int j = 0;
+	std::string charBB = fen::toCharBB(misc::split(*it, '/'));
 
-	for (char c : charBB) {
-		if (j == 8) { --i; j = 0; }
-		if (c == ' ') { ++j; continue; }
+	for (int i = 0; i < 8; i++) {
+		for (int j = 0; j < 8; j++) {
+			char c = charBB[8 * i + j];
 
-		Square current = Square(8 * i + j);
-		if (misc::isUpper(c)) BB_wb[WHITE] |= current;
-		else BB_wb[BLACK] |= current;
+			if (c == ' ') { ++j; continue; }
 
-		PieceType pt = toPieceType(c);
-		BB_pieces[(int)pt] |= current;
+			BitBoard current = toBB(Square(8 * i + j));
+			if (misc::isUpper(c)) BB_wb[WHITE] |= current;
+			else BB_wb[BLACK] |= current;
 
-		++j;
+			PieceType pt = toPieceType(c);
+			BB_pieces[pt] |= current;
+		}
 	}
 
 	++it;
@@ -71,4 +70,59 @@ void Position::clear() {
 
 	castlingRights = 0;
 	enPassant = SQNONE;
+}
+
+PieceType Position::getPieceOn(Square sq) {
+	return getPieceOn(sq, player);
+}
+
+PieceType Position::getPieceOn(Square sq, Color who) {
+	BitBoard currentPlayerBB = BB_wb[who];
+
+	for (int i = 0; i < 6; i++)
+		if (!isFree(BB_pieces[i] & currentPlayerBB, sq)) return PieceType(i);
+
+	return PIECENONE;
+}
+
+PieceType Position::getPieceOnAny(Square sq, Color& c) {
+	for (int i = 0; i < 6; i++) {
+		if (!isFree(BB_pieces[i], sq)) {
+			c = !isFree(BB_wb[WHITE], sq) ? WHITE : BLACK;
+			return PieceType(i);
+		}
+	}
+
+	return PIECENONE;
+}
+
+void Position::makeMove(const Move m) {
+	Square originSquare = move::originSquare(m);
+	Square destinationSquare = move::destinationSquare(m);
+	PieceType movedPiece = getPieceOn(originSquare);
+	PieceType capturedPiece = getPieceOn(destinationSquare);
+
+	// TODO assert that there is actually a piece standing on originSquare and no piece on destinationSquare.
+	BB_wb[player] ^= (toBB(originSquare) | toBB(destinationSquare));
+	BB_pieces[movedPiece] ^= (toBB(originSquare) | toBB(destinationSquare));
+}
+
+std::string Position::charBB() {
+	std::string result = "";
+
+	for (int i = 7; i >= 0; i--) {
+		for (int j = 0; j < 8; j++) {
+			Color who = WHITE;
+			Square sq = toSquare(File(j), Rank(i));
+			PieceType pieceOn = getPieceOnAny(sq, who);
+
+			result += toChar(pieceOn, who);
+		}
+	}
+
+	return result;
+}
+
+std::string Position::print() {
+	return printing::printBoard(charBB());
 }

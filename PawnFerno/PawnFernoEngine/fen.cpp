@@ -37,20 +37,22 @@ namespace fen {
 	}
 
 	Color sideToMove(string s) {
-		s == "w" ? WHITE : (s == "B" ? BLACK : throw new exception("Invalid color in fen"));
+		char colorChar = s[0];
+
+		return colorChar == 'w' ? WHITE : (colorChar == 'b' ? BLACK : throw new exception("Invalid color in fen"));
 	}
 
-	castling::Castling castlingRights(string c) {
+	Castling castlingRights(string c) {
 		assert(c.length() <= 4);
 
-		if (c == "-") return castling::None;
+		if (c == "-") return Castling::None;
 		assert(c.length() > 0);
 
-		castling::Castling result = castling::None;
+		Castling result = Castling::None;
 
-		for (auto cx : c) {
+		for (char cx : c) {
 			assert(misc::contains(castlingChars, cx)); // else the castling part of the fen includes an illegal character.
-			result += static_cast<castling::Castling>(cx);
+			result += (int)static_cast<Castling>(cx);
 		}
 
 		return result;

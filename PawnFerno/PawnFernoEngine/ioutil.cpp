@@ -1,43 +1,59 @@
 #include "ioutil.h"
 
 namespace printing {
-    string toBitString(BitBoard bb) {
-        string out = "";
+    std::string toBitString(BitBoard bb) {
+        std::string out = "";
         for (int i = 0; i < 64; i++) {
-            out += to_string(bb & 1);
+            out += std::to_string(bb & 1);
             bb >>= 1;
         }
+
         return out;
     }
 
-    void print(BitBoard bb) {
-        string bs = toBitString(bb);
+    std::string print(BitBoard bb) {
+        std::string bs = toBitString(bb);
+        std::string result = "";
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                cout << " " << bs[(7 - i) * 8 + j];
+                result += " ";
+                result += bs[(7 - i) * 8 + j];
             }
-            cout << endl;
+
+            result += "\n";
         }
+
+        return result;
     }
 
-    void print(Square sq) { print(toBB(sq)); }
+    std::string print(Square sq) { return print(toBB(sq)); }
 
-    void printBoard(const string charBB) {
+    std::string printBoard(const std::string charBB) {
+        std::string result = "";
+
         for (int i = 7; i >= 0; i--) {
-            cout << rankChar(Rank(i)) << " | ";
+            result += rankChar(Rank(i));
+            result += " | ";
 
             for (int j = 0; j < 7; j++) {
-                cout << charBB[8 * i + j] << " ";
+                result += charBB[8 * (7 - i) + j];
+                result += " ";
             }
 
-            cout << charBB[8 * i + 7] << endl;
+            result += charBB[8 * (7 - i) + 7];
+            result += "\n";
         }
 
-        cout << "   ----------------" << endl << "    ";
+        result += "   ----------------\n    ";
 
-        for (auto _ = 0; _ < 7; _++)
-            cout << fileChar(File(_)) << " ";
+        for (auto _ = 0; _ < 7; _++) {
+            result += fileChar(File(_));
+            result += " ";
+        }
 
-        cout << fileChar(File(7)) << endl;
+        result += fileChar(File(7));
+        result += "\n";
+
+        return result;
     }
 }

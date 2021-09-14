@@ -1,4 +1,5 @@
 #pragma once
+
 #ifndef TYPES_INCLUDE
 #define TYPES_INCLUDE
 
@@ -54,9 +55,9 @@ enum Direction {
 	DIRECTIONNONE = 0
 };
 
-enum Color {
-	WHITE = 0,
-	BLACK = 1
+enum Color : bool {
+	WHITE = false,
+	BLACK = true
 };
 
 enum class Castling {
@@ -139,12 +140,15 @@ inline T& operator+=(T& d1, int d2) { return d1 = d1 + d2; }
 #define ENABLE_BASE_OPERATORS_ON(T)												\
 ENABLE_ADD_OPERATORS_ON(T)														\
 inline T operator-(T d1, int d2) { return T(int(d1) - d2); }					\
-inline T operator-(T d) { return T(-int(d)); }								\
+inline T operator-(T d) { return T(-int(d)); }									\
 inline T& operator-=(T& d1, int d2) { return d1 = d1 - d2; }
 
 #define ENABLE_INCR_OPERATORS_ON(T)												\
 inline T& operator++(T& d) { return d = T(int(d) + 1); }						\
-inline T& operator--(T& d) { return d = T(int(d) - 1); }						
+inline T& operator--(T& d) { return d = T(int(d) - 1); }
+
+#define ENABLE_LOGIC_OPERATORS_ON(T)											\
+inline T operator!(T d) { return T(!(bool)d); }
 
 ENABLE_BASE_OPERATORS_ON(Direction)
 
@@ -155,7 +159,8 @@ ENABLE_INCR_OPERATORS_ON(PieceType)
 ENABLE_INCR_OPERATORS_ON(Square)
 ENABLE_INCR_OPERATORS_ON(File)
 ENABLE_INCR_OPERATORS_ON(Rank)
-ENABLE_INCR_OPERATORS_ON(Color)
+
+ENABLE_LOGIC_OPERATORS_ON(Color)
 
 #undef ENABLE_INCR_OPERATORS_ON
 #undef ENABLE_BASE_OPERATORS_ON

@@ -1,6 +1,6 @@
 #include "position.h"
 
-Position::Position() {
+Position::Position(State* state) {
 	BB_wb[WHITE] = BB_RANK1 | BB_RANK2;
 	BB_wb[BLACK] = BB_RANK7 | BB_RANK8;
 
@@ -11,14 +11,15 @@ Position::Position() {
 	BB_pieces[QUEEN] = toBB(SQd1) | toBB(SQd8);
 	BB_pieces[KING] = toBB(SQe1) | toBB(SQe8);
 
-	state.player = WHITE;
-	state.castlingRights = 15;
-	state.enPassant = SQNONE;
+	player = WHITE;
+	this->state = state;
 }
 
-Position::Position(std::string fen) {
+Position::Position(std::string fen, State* state) {
 	// Initialization, default values.
 	clear();
+
+	this->state = state;
 	std::vector<std::string> fenParts = misc::split(fen, ' ');
 
 	std::vector<std::string>::iterator it = fenParts.begin();
@@ -48,15 +49,15 @@ Position::Position(std::string fen) {
 	++it;
 
 	// Player to move.
-	state.player = fen::sideToMove(*it);
+	player = fen::sideToMove(*it);
 	++it;
 
 	// Castling rights.
-	state.castlingRights = (int)fen::castlingRights(*it);
+	state -> castlingRights = (int)fen::castlingRights(*it);
 	++it;
 
 	// En Passant square.
-	state.enPassant = fen::enPassant(*it);
+	state -> enPassant = fen::enPassant(*it);
 	++it;
 
 
@@ -72,12 +73,11 @@ void Position::clear() {
 		BB_pieces[i] = BB_EMPTY;
 	}
 
-	state.castlingRights = 0;
-	state.enPassant = SQNONE;
+	player = WHITE;
 }
 
 PieceType Position::getPieceOn(Square sq) {
-	return getPieceOn(sq, state.player);
+	return getPieceOn(sq, player);
 }
 
 PieceType Position::getPieceOn(Square sq, Color who) {
@@ -100,22 +100,40 @@ PieceType Position::getPieceOnAny(Square sq, Color& c) {
 	return PIECENONE;
 }
 
-void Position::makeMove(const Move m) {
+void Position::movePiece(Square origin, Square destination, PieceType piece, Color who) {
+	BitBoard orDesBB = toBB(origin) | toBB(destination);
+
+	BB_wb[who] ^= orDesBB;
+	BB_pieces[piece] ^= orDesBB;
+}
+
+void Position::makeMove(const Move m, State& newState) {
 	Square originSquare = move::originSquare(m);
 	Square destinationSquare = move::destinationSquare(m);
 	PieceType movedPiece = getPieceOn(originSquare);
 	PieceType capturedPiece = getPieceOn(destinationSquare);
 
 	// TODO assert that there is actually a piece standing on originSquare and no piece on destinationSquare.
-	BB_wb[state.player] ^= (toBB(originSquare) | toBB(destinationSquare));
-	BB_pieces[movedPiece] ^= (toBB(originSquare) | toBB(destinationSquare));
+	movePiece(originSquare, destinationSquare, movedPiece, player);
+
+	newState.capturedPiece = capturedPiece;
+	newState.previousState = state;
+	state = &newState;
+	player = !player;
 }
 
 void Position::undoMove(const Move m) {
 	Square destinationSquare = move::destinationSquare(m);
 	Square originSquare = move::originSquare(m);
 	PieceType movedPiece = getPieceOn(destinationSquare);
-	PieceType capturedPiece = 
+	PieceType capturedPiece = state -> capturedPiece;
+
+	Color playerWhoMoved = !player;
+
+	// Move the piece from the destination square to the origin square.
+	movePiece(destinationSquare, originSquare, movedPiece, playerWhoMoved);
+
+	player = playerWhoMoved;
 }
 
 std::string Position::charBB() {
@@ -136,4 +154,10 @@ std::string Position::charBB() {
 
 std::string Position::print() {
 	return printing::printBoard(charBB());
+}
+
+Position::~Position() {
+	delete[] BB_wb;
+	delete[] BB_pieces;
+	delete state;
 }

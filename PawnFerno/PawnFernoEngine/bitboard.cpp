@@ -32,8 +32,9 @@ void BitBoardInit() {
 			continue;
 		}
 
-		for (Color c = WHITE; c <= BLACK; ++c)
+		for (int i = 0; i <= 1; i++)
 		{
+			Color c = Color(i);
 			PAWN_PUSHES[c][sq] = shift(squareBB, PAWN_DIRECTIONS[c]);
 			PAWN_CAPTURES[c][sq] = shift(~BB_FILEH & squareBB, Direction(PAWN_DIRECTIONS[c] + EAST)) |
 				shift(~BB_FILEA & squareBB, Direction(PAWN_DIRECTIONS[c] + WEST));

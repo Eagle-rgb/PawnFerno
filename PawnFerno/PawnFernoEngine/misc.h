@@ -7,6 +7,10 @@
 
 namespace misc {
 	using namespace std;
+
+	/// <summary>
+	/// Splits the given string using the given separator.
+	/// </summary>
 	vector<string> split(string, char);
 
 	constexpr bool isNumeric(char c) {
@@ -25,6 +29,9 @@ namespace misc {
 		return 'A' <= c && 'z' >= c;
 	}
 
+	/// <summary>
+	/// Returns true if the given string contains the character.
+	/// </summary>
 	extern bool contains(string, char);
 }
 #endif

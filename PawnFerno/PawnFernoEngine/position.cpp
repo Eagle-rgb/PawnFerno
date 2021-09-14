@@ -26,13 +26,17 @@ Position::Position(std::string fen) {
 	// Board
 	std::string charBB = fen::toCharBB(misc::split(*it, '/'));
 
-	for (int i = 0; i < 8; i++) {
-		for (int j = 0; j < 8; j++) {
-			char c = charBB[8 * i + j];
+	// Goes through every square, reads the appropriate entry in the charBB and updates
+	// the appropriate piece bitboard as well as player bitboard.
+	for (Rank i = RANK1; i <= RANK8; ++i) {
+		for (File j = FILEA; j <= FILEH; ++j) {
+			Square sq = toSquare(j, i);
+
+			char c = charBB[sq];
 
 			if (c == ' ') { ++j; continue; }
 
-			BitBoard current = toBB(Square(8 * i + j));
+			BitBoard current = toBB(sq);
 			if (misc::isUpper(c)) BB_wb[WHITE] |= current;
 			else BB_wb[BLACK] |= current;
 
@@ -64,7 +68,7 @@ Position::Position(std::string fen) {
 void Position::clear() {
 	BB_wb[0] = BB_EMPTY; BB_wb[1] = BB_EMPTY;
 
-	for (int i = 0; i < 6; i++) {
+	for (PieceType i = PAWN; i <= KING; ++i) {
 		BB_pieces[i] = BB_EMPTY;
 	}
 
@@ -79,17 +83,17 @@ PieceType Position::getPieceOn(Square sq) {
 PieceType Position::getPieceOn(Square sq, Color who) {
 	BitBoard currentPlayerBB = BB_wb[who];
 
-	for (int i = 0; i < 6; i++)
-		if (!isFree(BB_pieces[i] & currentPlayerBB, sq)) return PieceType(i);
+	for (PieceType i = PAWN; i <= KING; ++i)
+		if (!isFree(BB_pieces[i] & currentPlayerBB, sq)) return i;
 
 	return PIECENONE;
 }
 
 PieceType Position::getPieceOnAny(Square sq, Color& c) {
-	for (int i = 0; i < 6; i++) {
+	for (PieceType i = PAWN; i <= KING; ++i) {
 		if (!isFree(BB_pieces[i], sq)) {
 			c = !isFree(BB_wb[WHITE], sq) ? WHITE : BLACK;
-			return PieceType(i);
+			return i;
 		}
 	}
 
@@ -110,10 +114,10 @@ void Position::makeMove(const Move m) {
 std::string Position::charBB() {
 	std::string result = "";
 
-	for (int i = 7; i >= 0; i--) {
-		for (int j = 0; j < 8; j++) {
+	for (Rank i = RANK8; i >= RANK1; --i) {
+		for (File j = FILEA; j <= FILEH; ++j) {
 			Color who = WHITE;
-			Square sq = toSquare(File(j), Rank(i));
+			Square sq = toSquare(j, i);
 			PieceType pieceOn = getPieceOnAny(sq, who);
 
 			result += toChar(pieceOn, who);

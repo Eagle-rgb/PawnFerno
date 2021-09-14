@@ -67,15 +67,34 @@ enum class Castling {
 	q = 0b1000
 };
 
+/// <summary>
+/// Gives the index starting from east going clockwise of the given direction.
+/// </summary>
 constexpr int directionIndex(Direction d) {
 	return DIRECTION_INDEXES[d + 9];
 }
 
+/// <summary>
+/// Constructs the square residing on file f and rank r.
+/// </summary>
 constexpr Square toSquare(File f, Rank r) {
 	return Square((8 * r) + f);
 }
 
+/// <summary>
+/// Converts a given character into the appropriate piece type. Case-Insensitive.
+/// Following conversions are performed:
+///		p : Pawn
+///		n : Knight
+///		b : Bishop
+///		r : Rook
+///		q : Queen
+///		k : King
+/// 
+/// If the character does not match any of the above, PIECENONE will be returned.
+/// </summary>
 constexpr PieceType toPieceType(char pt) {
+	// Makes pt lowercase.
 	pt = pt < 'a' ? pt - 'A' + 'a' : pt;
 
 	switch (pt) {
@@ -89,27 +108,36 @@ constexpr PieceType toPieceType(char pt) {
 	}
 }
 
-// Returns the appropriate piece character for the given piece.
+/// <summary>
+/// Returns the appropriate piece character for the given piece.
+/// This also considers the player to move, so if black move, the character will be uppercase.
+/// </summary>
 constexpr char toChar(PieceType pt, Color who) {
 	return pt == PIECENONE ? ' ' : 32 * (int)who + PIECE_CHARS[pt] - 32;
 }
 
+/// <summary>
+/// Returns a character representation for a given rank (RANK1 -> 1)
+/// </summary>
 constexpr char rankChar(Rank r) {
 	return RANK_CHARS[(int)r];
 }
 
+/// <summary>
+/// Returns a character representation for a given file (FILEA -> a)
+/// </summary>
 constexpr char fileChar(File f) {
 	return FILE_CHARS[(int)f];
 }
 
 #define ENABLE_ADD_OPERATORS_ON(T)												\
-constexpr T operator+(T d1, int d2) { return T(int(d1) + d2); }					\
+inline T operator+(T d1, int d2) { return T(int(d1) + d2); }					\
 inline T& operator+=(T& d1, int d2) { return d1 = d1 + d2; }
 
 #define ENABLE_BASE_OPERATORS_ON(T)												\
 ENABLE_ADD_OPERATORS_ON(T)														\
-constexpr T operator-(T d1, int d2) { return T(int(d1) - d2); }					\
-constexpr T operator-(T d) { return T(-int(d)); }								\
+inline T operator-(T d1, int d2) { return T(int(d1) - d2); }					\
+inline T operator-(T d) { return T(-int(d)); }								\
 inline T& operator-=(T& d1, int d2) { return d1 = d1 - d2; }
 
 #define ENABLE_INCR_OPERATORS_ON(T)												\

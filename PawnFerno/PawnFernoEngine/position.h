@@ -21,22 +21,41 @@ public:
 	Position();
 	Position(std::string fen);
 
+	/// <summary>
+	/// Clears the current position and sets all values to default values.
+	/// </summary>
 	void clear();
 
-	// Returns the piece standing on the given square for the current player.
+	/// <summary>
+	/// Returns the piece standing on the given square for the current player.
+	/// </summary>
 	PieceType getPieceOn(Square);
 
-	// Returns the piece standing on the given square for the given player.
+	/// <summary>
+	/// Returns the piece standing on the given square for the given player.
+	/// </summary>
 	PieceType getPieceOn(Square, Color);
 
-	// Returns the piece standing on the given square, for any player.
-	// Also gives the player owning that piece as a reference parameter.
-	// Gives black as color if the square is empty.
+	/// <summary>
+	/// Returns the piece standing on the given square, for any player.
+	/// Also gives the player owning that piece as a reference parameter.
+	/// Gives black as color if the square is empty.
+	/// </summary>
 	PieceType getPieceOnAny(Square, Color&);
 
+	/// <summary>
+	/// Makes the given move on the board.
+	/// </summary>
 	void makeMove(const Move);
 
+	/// <summary>
+	/// Returns a character-string like in FEN but without the '/' and with spaces for no pieces.
+	/// </summary>
 	std::string charBB();
+
+	/// <summary>
+	/// Returns a printable string of the given position.
+	/// </summary>
 	std::string print();
 };
 

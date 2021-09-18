@@ -24,8 +24,10 @@ Position::Position(std::string fen, State* state) {
 
 	std::vector<std::string>::iterator it = fenParts.begin();
 
+	char charBB[64];
+
 	// Board
-	std::string charBB = fen::toCharBB(misc::split(*it, '/'));
+	fen::toCharBB(misc::split(*it, '/'), charBB);
 
 	// Goes through every square, reads the appropriate entry in the charBB and updates
 	// the appropriate piece bitboard as well as player bitboard.
@@ -38,8 +40,8 @@ Position::Position(std::string fen, State* state) {
 			if (c == ' ') { ++j; continue; }
 
 			BitBoard current = toBB(sq);
-			if (misc::isUpper(c)) BB_wb[WHITE] |= current;
-			else BB_wb[BLACK] |= current;
+			if (misc::isUpper(c)) BB_wb[(int)WHITE] |= current;
+			else BB_wb[(int)BLACK] |= current;
 
 			PieceType pt = toPieceType(c);
 			BB_pieces[pt] |= current;
@@ -53,7 +55,7 @@ Position::Position(std::string fen, State* state) {
 	++it;
 
 	// Castling rights.
-	state -> castlingRights = (int)fen::castlingRights(*it);
+	state -> castlingRights = (short)fen::castlingRights(*it);
 	++it;
 
 	// En Passant square.
@@ -113,25 +115,32 @@ void Position::makeMove(const Move m, State& newState) {
 	PieceType movedPiece = getPieceOn(originSquare);
 	PieceType capturedPiece = getPieceOn(destinationSquare);
 
+	newState.previousState = state;
+	state = &newState;
+
 	// TODO assert that there is actually a piece standing on originSquare and no piece on destinationSquare.
 	movePiece(originSquare, destinationSquare, movedPiece, player);
 
-	newState.capturedPiece = capturedPiece;
-	newState.previousState = state;
-	state = &newState;
+	state -> capturedPiece = capturedPiece;
 	player = !player;
 }
 
 void Position::undoMove(const Move m) {
+	assert(state->previousState != nullptr);
+
 	Square destinationSquare = move::destinationSquare(m);
 	Square originSquare = move::originSquare(m);
-	PieceType movedPiece = getPieceOn(destinationSquare);
+	PieceType movedPiece = getPieceOn(destinationSquare, !player);
+	assert(movedPiece != PIECENONE);
+
 	PieceType capturedPiece = state -> capturedPiece;
 
 	Color playerWhoMoved = !player;
 
 	// Move the piece from the destination square to the origin square.
 	movePiece(destinationSquare, originSquare, movedPiece, playerWhoMoved);
+
+	state = state->previousState;
 
 	player = playerWhoMoved;
 }
@@ -154,10 +163,4 @@ std::string Position::charBB() {
 
 std::string Position::print() {
 	return printing::printBoard(charBB());
-}
-
-Position::~Position() {
-	delete[] BB_wb;
-	delete[] BB_pieces;
-	delete state;
 }

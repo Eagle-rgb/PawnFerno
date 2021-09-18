@@ -66,7 +66,7 @@ namespace bits
 	   20, 47, 38, 22, 17, 37, 36, 26
 	};
 
-	extern int ms1bTable[511];
+	extern int ms1bTable[255];
 
 	constexpr int bitScanForward(BitBoard bb) {
 		unsigned int folded = 0;

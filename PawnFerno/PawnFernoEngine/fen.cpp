@@ -1,10 +1,8 @@
 #include "fen.h"
 
 namespace fen {
-	string toCharBB(vector<string> boardParts) {
+	void toCharBB(vector<string> boardParts, char* board) {
 		assert(boardParts.size() == 8);
-
-		char board[64];
 
 		vector<string>::iterator it;
 		int i = 0;
@@ -32,8 +30,6 @@ namespace fen {
 
 			++i;
 		}
-
-		return board;
 	}
 
 	Color sideToMove(string s) {
@@ -52,7 +48,7 @@ namespace fen {
 
 		for (char cx : c) {
 			assert(misc::contains(castlingChars, cx)); // else the castling part of the fen includes an illegal character.
-			result += (int)static_cast<Castling>(cx);
+			result += (short)toCastlingValue(cx);
 		}
 
 		return result;

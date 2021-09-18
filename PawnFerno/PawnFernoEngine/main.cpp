@@ -5,7 +5,7 @@ int main() {
 	State s = startState();
 	State n = startState();
 
-	Position p(startPosFen, &s);
+	Position p = Position(startPosFen, &s);
 
 	std::cout << p.print();
 

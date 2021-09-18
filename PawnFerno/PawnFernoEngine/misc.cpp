@@ -1,7 +1,7 @@
 #include "misc.h"
 
 namespace misc {
-	vector<string> split(string input, char separator) {
+	vector<string> split(const string& input, char separator) {
 		int length = input.length();
 		vector<string> output;
 		vector<char> current;

@@ -7,7 +7,7 @@
 
 struct State {
 	PieceType capturedPiece;
-	int castlingRights;
+	short castlingRights;
 	Square enPassant;
 
 	State* previousState;

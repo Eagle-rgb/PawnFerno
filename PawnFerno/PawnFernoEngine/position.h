@@ -11,6 +11,8 @@
 #include <vector>
 #include <string>
 
+constexpr char startPosFen[57] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
 class Position {
 private:
 	BitBoard BB_wb[2];
@@ -72,8 +74,6 @@ public:
 	/// Returns a printable string of the given position.
 	/// </summary>
 	std::string print();
-
-	~Position();
 };
 
 #endif

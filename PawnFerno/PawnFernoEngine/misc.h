@@ -11,7 +11,7 @@ namespace misc {
 	/// <summary>
 	/// Splits the given string using the given separator.
 	/// </summary>
-	vector<string> split(string, char);
+	vector<string> split(const string&, char);
 
 	constexpr bool isNumeric(char c) {
 		return '0' <= c && '9' >= c;

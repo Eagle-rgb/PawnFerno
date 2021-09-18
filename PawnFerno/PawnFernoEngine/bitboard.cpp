@@ -8,7 +8,7 @@ BitBoard KING_ATTACKS[64];
 BitBoard RAYS[64][8];
 
 namespace bits {
-	int ms1bTable[511];
+	int ms1bTable[255];
 }
 
 void BitBoardInit() {

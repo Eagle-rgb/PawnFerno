@@ -131,6 +131,20 @@ constexpr char fileChar(File f) {
 	return FILE_CHARS[(int)f];
 }
 
+/// <summary>
+/// Basically casts the character to Castling enum. Returns None as default.
+/// </summary>
+constexpr Castling toCastlingValue(char c) {
+	switch (c)
+	{
+	case 'K': return Castling::K;
+	case 'k': return Castling::k;
+	case 'Q': return Castling::q;
+	case 'q': return Castling::Q;
+	default: return Castling::None;
+	}
+}
+
 
 
 #define ENABLE_ADD_OPERATORS_ON(T)												\

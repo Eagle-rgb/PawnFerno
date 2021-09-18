@@ -1,3 +1,8 @@
+#pragma once
+
+#ifndef IOUTIL_INCLUDE
+#define IOUTIL_INCLUDE
+
 #include "bitboard.h"
 #include <string>
 #include "misc.h"
@@ -24,3 +29,5 @@ namespace printing {
 	/// </summary>
 	std::string printBoard(std::string);
 }
+
+#endif IOUTIL_INCLUDE

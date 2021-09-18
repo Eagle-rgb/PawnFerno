@@ -12,7 +12,7 @@ namespace fen {
 	constexpr char pieceChars[12] = { 'K', 'Q', 'R', 'B', 'N', 'P', 'k', 'q', 'r', 'b', 'n', 'p' };
 	constexpr char castlingChars[4] = { 'k', 'K', 'q', 'Q' };
 
-	string toCharBB(vector<string>);
+	void toCharBB(vector<string>, char*);
 	Color sideToMove(string);
 	Castling castlingRights(string);
 	Square enPassant(string);

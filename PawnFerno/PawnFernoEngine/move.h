@@ -4,6 +4,7 @@
 #define MOVE_INCLUDED
 
 #include "types.h"
+#include "bitboard.h"
 
 namespace move {
 	constexpr short originSquareBits = 0b11111;

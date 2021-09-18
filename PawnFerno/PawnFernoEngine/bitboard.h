@@ -150,10 +150,19 @@ constexpr BitBoard shift(Square sq, Direction d) { return shift(toBB(sq), d); }
 constexpr BitBoard shiftBy(Square sq, Direction d, int amount) { return shiftBy(toBB(sq), d, amount); }
 
 void BitBoardInit();
-BitBoard pseudoLegalBishop(Square, BitBoard);
-BitBoard pseudoLegalRook(Square, BitBoard);
-BitBoard pseudoLegalQueen(Square, BitBoard);
-BitBoard tillFirstBlocker(Square, BitBoard, Direction);
+BitBoard pseudoLegalBishop(Square, BitBoard blockers);
+BitBoard pseudoLegalRook(Square, BitBoard blockers);
+BitBoard pseudoLegalQueen(Square, BitBoard blockers);
+BitBoard tillFirstBlocker(Square, BitBoard blockers, Direction);
+BitBoard attacksOf(Square from, BitBoard blockers, Color c, PieceType piece);
+
+/// <summary>
+/// Returns a BitBoard containing all attacked squares from our pieces.
+/// </summary>
+/// <param name="ourPieces">: Our attacking pieces. </param>
+/// <param name="blockers">: All blocking pieces. </param>
+/// <param name="c">: The attacking player. </param>
+BitBoard attacksOfAll(BitBoard ourPieces[6], BitBoard blockers, Color c);
 
 /*#define ENABLE_BITBOARD_OPERATORS_ON(T) \
 constexpr BitBoard operator&(BitBoard b, T d) { return BitBoard(toBB(d) & b); }	\

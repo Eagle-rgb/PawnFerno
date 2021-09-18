@@ -2,8 +2,7 @@
 
 int main() {
 	BitBoardInit();
-	State s = startState();
-	State n = startState();
+	State s, n;
 
 	Position p = Position(startPosFen, &s);
 
@@ -15,4 +14,9 @@ int main() {
 
 	p.undoMove(move::makeMove(SQe2, SQe4));
 	std::cout << std::endl << p.print();
+
+	std::cout << std::endl << printing::print(KING_ATTACKS[SQe8]);
+	std::cout << std::endl << printing::print(p.getEnemyAttacks());
+
+	std::cout << std::endl << p.inCheck();
 }

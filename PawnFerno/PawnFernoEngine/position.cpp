@@ -102,6 +102,23 @@ PieceType Position::getPieceOnAny(Square sq, Color& c) {
 	return PIECENONE;
 }
 
+BitBoard Position::getEnemyAttacks() {
+	BitBoard ourPieces[6];
+	BitBoard blockers = BB_wb[0] | BB_wb[1];
+
+	for (PieceType p = PAWN; p <= KING; ++p) {
+		ourPieces[p] = BB_pieces[p] & BB_wb[!player];
+	}
+
+	state->moveGenCheck |= generatedEnemyAttacks;
+	return (state->enemyAttacks = attacksOfAll(ourPieces, blockers, !player));
+}
+
+bool Position::inCheck() {
+	assert((state->moveGenCheck & generatedEnemyAttacks) != 0);
+	return !isEmpty(BB_wb[player] & BB_pieces[KING] & state->enemyAttacks);
+}
+
 void Position::movePiece(Square origin, Square destination, PieceType piece, Color who) {
 	BitBoard orDesBB = toBB(origin) | toBB(destination);
 
@@ -130,6 +147,8 @@ void Position::undoMove(const Move m) {
 
 	Square destinationSquare = move::destinationSquare(m);
 	Square originSquare = move::originSquare(m);
+
+	// The previous player moved the piece. Get that piece.
 	PieceType movedPiece = getPieceOn(destinationSquare, !player);
 	assert(movedPiece != PIECENONE);
 

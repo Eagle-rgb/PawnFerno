@@ -1,4 +1,9 @@
 #pragma once
 
+#ifndef MAIN_INCLUDED
+#define MAIN_INCLUDED
+
 #include "position.h"
 #include <iostream>
+
+#endif

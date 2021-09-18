@@ -7,6 +7,11 @@
 #include <string>
 #include "misc.h"
 #include "fen.h"
+#include <iostream>
+
+/*inline std::ostream& operator<<(std::ostream& os, const BitBoard& bb) {
+	os << printing::print(bb); return os;
+}*/
 
 namespace printing {
 	/// <summary>

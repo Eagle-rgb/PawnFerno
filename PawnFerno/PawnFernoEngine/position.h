@@ -56,6 +56,18 @@ public:
 	PieceType getPieceOnAny(Square, Color&);
 
 	/// <summary>
+	/// Calculates all squares being attacked by the enemy and returns them.
+	/// </summary>
+	/// <returns> BitBoard containing the attacked squares. </returns>
+	BitBoard getEnemyAttacks();
+
+	/// <summary>
+	/// Returns true if the current player is in check.
+	/// PREREQUISITE: 0b1;
+	/// </summary>
+	bool inCheck();
+
+	/// <summary>
 	/// Makes the given move on the board.
 	/// </summary>
 	void makeMove(const Move, State& newState);

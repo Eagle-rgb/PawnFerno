@@ -29,18 +29,18 @@ void BitBoardInit() {
 			PAWN_PUSHES[BLACK][sq] = BB_EMPTY;
 			PAWN_CAPTURES[WHITE][sq] = BB_EMPTY;
 			PAWN_CAPTURES[BLACK][sq] = BB_EMPTY;
-			continue;
 		}
+		else {
+			for (int i = 0; i <= 1; i++)
+			{
+				Color c = Color(i);
+				PAWN_PUSHES[c][sq] = shift(squareBB, PAWN_DIRECTIONS[c]);
+				PAWN_CAPTURES[c][sq] = shift(~BB_FILEH & squareBB, Direction(PAWN_DIRECTIONS[c] + EAST)) |
+					shift(~BB_FILEA & squareBB, Direction(PAWN_DIRECTIONS[c] + WEST));
 
-		for (int i = 0; i <= 1; i++)
-		{
-			Color c = Color(i);
-			PAWN_PUSHES[c][sq] = shift(squareBB, PAWN_DIRECTIONS[c]);
-			PAWN_CAPTURES[c][sq] = shift(~BB_FILEH & squareBB, Direction(PAWN_DIRECTIONS[c] + EAST)) |
-				shift(~BB_FILEA & squareBB, Direction(PAWN_DIRECTIONS[c] + WEST));
-
-			if (toRank(sq) == PAWN_DOUBLE_GO_FORWARD_ON_THE_CHESSBOARD_NON_EN_PASSANT_FOR_WHITE_AND_BLACK[c]) {
-				PAWN_PUSHES[c][sq] |= shiftBy(squareBB, PAWN_DIRECTIONS[c], 2);
+				if (toRank(sq) == PAWN_DOUBLE_GO_FORWARD_ON_THE_CHESSBOARD_NON_EN_PASSANT_FOR_WHITE_AND_BLACK[c]) {
+					PAWN_PUSHES[c][sq] |= shiftBy(squareBB, PAWN_DIRECTIONS[c], 2);
+				}
 			}
 		}
 
@@ -122,5 +122,32 @@ BitBoard tillFirstBlocker(Square from, BitBoard blockers, Direction d) {
 
 	Square firstCollision = Square(d > 0 ? bits::bitScanForward(blockerCollision) : bits::bitScanBackward(blockerCollision));
 	return rayMask ^ RAYS[firstCollision][directionIndex(d)];
+}
+
+BitBoard attacksOf(Square from, BitBoard blockers, Color c, PieceType piece) {
+	switch (piece)
+	{
+	case PAWN: return PAWN_CAPTURES[c][from];
+	case KNIGHT: return KNIGHT_ATTACKS[from];
+	case BISHOP: return pseudoLegalBishop(from, blockers);
+	case ROOK: return pseudoLegalRook(from, blockers);
+	case QUEEN: return pseudoLegalQueen(from, blockers);
+	case KING: return KING_ATTACKS[from];
+	default: return BB_EMPTY;
+	}
+}
+
+BitBoard attacksOfAll(BitBoard ourPieces[6], BitBoard blockers, Color c) {
+	BitBoard result = BB_EMPTY;
+
+	for (PieceType p = PAWN; p <= KING; ++p) {
+		Square sq = SQNONE;
+
+		while ((sq = bits::popLSB(ourPieces[p])) != SQNONE) {
+			result |= attacksOf(sq, blockers, c, p);
+		}
+	}
+
+	return result;
 }
 

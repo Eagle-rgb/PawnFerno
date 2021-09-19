@@ -8,6 +8,9 @@
 #include <vector>
 
 constexpr short generatedEnemyAttacks = 0b1;
+constexpr short generatedCheckingPieces = 0b10;
+constexpr short generatedPinnedPieces = 0b100;
+constexpr short generatedLegalMoves = 0b1000;
 
 struct State {
 	PieceType capturedPiece;
@@ -16,6 +19,8 @@ struct State {
 
 	// Move generation
 	BitBoard enemyAttacks;
+	BitBoard pinnedPieces;
+	BitBoard checkingPieces;
 	std::vector<Move> legalMoves;
 
 	// Move generation check (see constexpr above for bit sets)

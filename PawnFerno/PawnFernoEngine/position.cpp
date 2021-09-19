@@ -18,7 +18,7 @@ Position::Position(State* state) {
 Position::Position(std::string fen, State* state) {
 	// Initialization, default values.
 	clear();
-
+	
 	this->state = state;
 	std::vector<std::string> fenParts = misc::split(fen, ' ');
 
@@ -37,7 +37,7 @@ Position::Position(std::string fen, State* state) {
 
 			char c = charBB[sq];
 
-			if (c == ' ') { ++j; continue; }
+			if (c == ' ') continue;
 
 			BitBoard current = toBB(sq);
 			if (misc::isUpper(c)) BB_wb[(int)WHITE] |= current;
@@ -61,7 +61,6 @@ Position::Position(std::string fen, State* state) {
 	// En Passant square.
 	state -> enPassant = fen::enPassant(*it);
 	++it;
-
 
 	// Half move clock. TODO
 
@@ -114,9 +113,10 @@ BitBoard Position::getEnemyAttacks() {
 	return (state->enemyAttacks = attacksOfAll(enemyPieces, blockers, !player));
 }
 
-BitBoard Position::getPinners() {
+void Position::makePinnersAndCheckers() {
 	Square kingSquare = toSquare(BB_wb[player] & BB_pieces[KING]);
-	BitBoard pinnerRays = BB_EMPTY;
+	//BitBoard pinnerRays = BB_EMPTY;
+	BitBoard pinnedPieces = BB_EMPTY;
 	BitBoard checkingPieces = BB_EMPTY;
 
 	// Remember that only sliders can pin.
@@ -129,12 +129,12 @@ BitBoard Position::getPinners() {
 			Direction toKing = relativeDirection(sq, kingSquare);
 
 			// Abort if this piece can not attack in that direction.
-			if (p == BISHOP && (abs(toKing) == 1 || abs(toKing) == 8)) continue;
-			else if (p == ROOK && (abs(toKing) == 7 || abs(toKing) == 9)) continue;
+			if (p == BISHOP && (abs(toKing) == EAST || abs(toKing) == NORTH)) continue;
+			else if (p == ROOK && (abs(toKing) == NORTHWEST || abs(toKing) == NORTHEAST)) continue;
 
 			// Shoot ray from the piece to the king and backwards and see if they meet.
-			BitBoard shotToKing = RAYS[sq][toKing];
-			BitBoard shotFromKing = RAYS[kingSquare][-toKing];
+			BitBoard shotToKing = RAYS[sq][directionIndex(toKing)];
+			BitBoard shotFromKing = RAYS[kingSquare][directionIndex(-toKing)];
 
 			if (isEmpty(shotToKing & shotFromKing)) continue;
 
@@ -151,17 +151,121 @@ BitBoard Position::getPinners() {
 
 			// Finally, this is a checking piece or a pinner (we will save the ray in both cases).
 			// Doing it this way will include the pinner's square and the king square.
-			pinnerRays |= sq | (shotToKing ^ RAYS[kingSquare][toKing]) | kingSquare;
+			//pinnerRays |= toBB(sq) | (shotToKing ^ RAYS[kingSquare][directionIndex(toKing)]);
+			pinnedPieces |= between;
 		}
 
 	}
 
-	return 0;
+	Square sq = SQNONE;
+	BitBoard enemyPawns = BB_pieces[PAWN] & BB_wb[!player];
+
+	while ((sq = bits::popLSB(enemyPawns)) != SQNONE) {
+		if (!isEmpty(PAWN_CAPTURES[!player][sq] & toBB(kingSquare)))
+			checkingPieces |= toBB(sq);
+	}
+
+	BitBoard enemyKnights = BB_pieces[KNIGHT] & BB_wb[!player];
+
+	while ((sq = bits::popLSB(enemyKnights)) != SQNONE) {
+		if (!isEmpty(KNIGHT_ATTACKS[sq] & toBB(kingSquare)))
+			checkingPieces |= toBB(sq);
+	}
+
+	state->checkingPieces = checkingPieces;
+	state->pinnedPieces = pinnedPieces;
+	state->moveGenCheck |= generatedCheckingPieces | generatedPinnedPieces;
+}
+
+std::vector<Move> Position::getLegalMoves() {
+	assert((state->moveGenCheck & 0b111) == 0b111);
+
+	BitBoard ourPieces[6];
+	BitBoard blockers = BB_wb[WHITE] | BB_wb[BLACK];
+	Square kingSquare = toSquare(BB_wb[player] & BB_pieces[KING]);
+	Square sq = SQNONE;  // iterator square.
+
+	std::vector<Move> moves;
+
+	for (PieceType p = PAWN; p <= KING; ++p) {
+		ourPieces[p] = BB_pieces[p] & BB_wb[player];
+	}
+
+	if (!inDoubleCheck()) {
+		BitBoard checkRay = BB_FULL;
+
+		if (inCheck()) {
+			Square checkingPiece = toSquare(state->checkingPieces);
+			checkRay = drawLine(kingSquare, checkingPiece) | state->checkingPieces;
+		}
+
+		// Pawn moves (no en passant)
+		while ((sq = bits::popLSB(ourPieces[PAWN])) != SQNONE) {
+			BitBoard moveBB = PAWN_CAPTURES[player][sq] & BB_wb[!player];
+
+			// Very compact way to determine if we can push our pawn, and if yes, then to which square.
+			moveBB |= PAWN_PUSHES[player][sq] & ~(blockers | (shift(blockers ^ toBB(sq), PAWN_DIRECTIONS[player])));
+
+			if (isPinned(sq)) {
+				moveBB &= RAYS[kingSquare][relativeDirection(kingSquare, sq)];
+			}
+
+			moveBB &= checkRay;
+
+			std::vector<Move> pawnMoves = move::makeNormalMoves(sq, moveBB);
+
+			moves.insert(moves.end(), pawnMoves.begin(), pawnMoves.end());
+		}
+
+		// Knight and slider moves
+		for (PieceType p = KNIGHT; p <= QUEEN; ++p) {
+			while ((sq = bits::popLSB(ourPieces[p])) != SQNONE) {
+				BitBoard moveBB = attacksOf(sq, blockers, player, p);
+
+				// First mask. We can not capture our own pieces.
+				moveBB &= ~BB_wb[player];
+
+				// Second mask. We can only move on the pin ray.
+				if (isPinned(sq)) {
+					moveBB &= RAYS[kingSquare][relativeDirection(kingSquare, sq)];
+				}
+
+				moveBB &= checkRay;
+
+				std::vector<Move> pieceMoves = move::makeNormalMoves(sq, moveBB);
+
+				moves.insert(moves.end(), pieceMoves.begin(), pieceMoves.end());
+			}
+		}
+	}
+
+	// King moves.
+	BitBoard moveBB = KING_ATTACKS[kingSquare];
+	moveBB &= ~state->enemyAttacks;
+	moveBB &= ~BB_wb[player];
+
+	std::vector<Move> kingMoves = move::makeNormalMoves(kingSquare, moveBB);
+	moves.insert(moves.end(), kingMoves.begin(), kingMoves.end());
+
+	state->legalMoves = moves;
+	state->moveGenCheck |= generatedLegalMoves;
+
+	return moves;
 }
 
 bool Position::inCheck() {
 	assert((state->moveGenCheck & generatedEnemyAttacks) != 0);
 	return !isEmpty(BB_wb[player] & BB_pieces[KING] & state->enemyAttacks);
+}
+
+bool Position::inDoubleCheck() {
+	assert((state->moveGenCheck & generatedEnemyAttacks) != 0);
+	return more_than_one(BB_wb[player] & BB_pieces[KING] & state->enemyAttacks);
+}
+
+bool Position::isPinned(Square sq) {
+	assert((state->moveGenCheck & generatedPinnedPieces) != 0);
+	return !isFree(state->pinnedPieces, sq);
 }
 
 void Position::movePiece(Square origin, Square destination, PieceType piece, Color who) {

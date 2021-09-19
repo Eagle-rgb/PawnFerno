@@ -136,6 +136,15 @@ constexpr bool more_than_one(BitBoard bb) {
 	return !isEmpty(bb & bb - 1);
 }
 
+// Draws a line from a to b excluding both endpoints.
+constexpr BitBoard drawLine(Square a, Square b) {
+	Direction relDir = relativeDirection(a, b);
+	return RAYS[a][directionIndex(relDir)] & RAYS[b][directionIndex(-relDir)];
+}
+
+// TODO
+//constexpr bool aligned(Square a, Square b, Square c)
+
 // Shift BitBoard by 1 square
 constexpr BitBoard shift(BitBoard b, Direction d) {
 	return d > 0 ? b << d : b >> -d;

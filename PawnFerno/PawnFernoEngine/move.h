@@ -5,6 +5,7 @@
 
 #include "types.h"
 #include "bitboard.h"
+#include <vector>
 
 namespace move {
 	constexpr short originSquareBits = 0b11111;
@@ -29,6 +30,8 @@ namespace move {
 	constexpr Square destinationSquare(Move m) {
 		return originSquare(m >> 5);
 	}
+
+	std::vector<Move> makeNormalMoves(Square from, BitBoard destinations);
 }
 
 #endif

@@ -88,7 +88,9 @@ constexpr File toFile(Square sq) {
 /// Returns the relative direction of square b to origin a.
 /// </summary>
 constexpr Direction relativeDirection(Square a, Square b) {
-	return Direction(((toFile(b) - toFile(a)) & -0b1) + ((toRank(b) - toRank(a)) & -0b1));
+	int x = toFile(b) - toFile(a) > 0 ? 1 : (toFile(b) - toFile(a) < 0 ? -1 : 0);
+	int y = toRank(b) - toRank(a) > 0 ? 8 : (toRank(b) - toRank(a) < 0 ? -8 : 0);
+	return Direction(x + y);
 }
 
 /// <summary>

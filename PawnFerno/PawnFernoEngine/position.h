@@ -17,11 +17,8 @@ class Position {
 private:
 	BitBoard BB_wb[2];
 	BitBoard BB_pieces[6];
-	State* state;
 
 	Color player;
-
-	//std::vector<Move> legalMoves;
 
 	/// <summary>
 	/// Moves the given piece from the origin to destination. Does not perform any assertions!.
@@ -30,6 +27,8 @@ private:
 	void movePiece(Square origin, Square destination, PieceType, Color);
 
 public:
+	State* state;
+
 	Position(State*);
 	Position(std::string fen, State*);
 
@@ -62,17 +61,33 @@ public:
 	BitBoard getEnemyAttacks();
 
 	/// <summary>
-	/// Calculates all pins on the current player. 
-	/// Will return all pinners as a BitBoard.
-	/// Saves pin rays and pinned pieces in the state.
+	/// Calculates all pins and checkers on the current player. 
+	/// Saves pinned pieces and checkers in the state.
 	/// </summary>
-	BitBoard getPinners();
+	void makePinnersAndCheckers();
+
+	/// <summary>
+	/// Calculates all legal moves.
+	/// PREREQUISITE: 0b111
+	/// </summary>
+	std::vector<Move> getLegalMoves();
 
 	/// <summary>
 	/// Returns true if the current player is in check.
-	/// PREREQUISITE: 0b1;
+	/// PREREQUISITE: 0b1
 	/// </summary>
 	bool inCheck();
+
+	/// <summary>
+	/// Returns true if the current player is in double check.
+	/// </summary>
+	bool inDoubleCheck();
+
+	/// <summary>
+	/// Returns true if the piece on the given square is pinned.
+	/// PREREQUISITE: 0b100
+	/// </summary>
+	bool isPinned(Square);
 
 	/// <summary>
 	/// Makes the given move on the board.

@@ -4,19 +4,28 @@ int main() {
 	BitBoardInit();
 	State s, n;
 
-	Position p = Position(startPosFen, &s);
+	std::string fen = "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -";
 
+	Position p = Position(fen, &s);
+	
 	std::cout << p.print();
 
-	p.makeMove(move::makeMove(SQe2, SQe4), n);
+	std::cout << std::endl << p.state->castlingRights;
+	std::cout << std::endl << p.state->enPassant;
 
-	std::cout << std::endl << p.print();
-
-	p.undoMove(move::makeMove(SQe2, SQe4));
-	std::cout << std::endl << p.print();
-
-	std::cout << std::endl << printing::print(KING_ATTACKS[SQe8]);
 	std::cout << std::endl << printing::print(p.getEnemyAttacks());
 
+	std::cout << std::endl << printing::print(RAYS[SQc3][SOUTHWEST]);
+
 	std::cout << std::endl << p.inCheck();
+
+	std::cout << std::endl << printing::print(RAYS[SQc5][SOUTHEAST]);
+
+	p.makePinnersAndCheckers();
+
+	std::cout << std::endl << printing::print(p.state->pinnedPieces);
+
+	p.getLegalMoves();
+
+	std::cout << std::endl << p.state->legalMoves.size();
 }

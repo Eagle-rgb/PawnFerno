@@ -62,6 +62,13 @@ public:
 	BitBoard getEnemyAttacks();
 
 	/// <summary>
+	/// Calculates all pins on the current player. 
+	/// Will return all pinners as a BitBoard.
+	/// Saves pin rays and pinned pieces in the state.
+	/// </summary>
+	BitBoard getPinners();
+
+	/// <summary>
 	/// Returns true if the current player is in check.
 	/// PREREQUISITE: 0b1;
 	/// </summary>

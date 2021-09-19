@@ -3,6 +3,8 @@
 #ifndef BITBOARD_INCLUDE
 #define BITBOARD_INCLUDE
 
+#define QUEEN_DIRECTIONS DIRECTIONS
+
 #include "types.h"
 #include <cmath>
 
@@ -115,14 +117,6 @@ constexpr BitBoard toBB(File f) {
 	return BB_FILEA << f;
 }
 
-// Get Rank, File from Square
-constexpr Rank toRank(Square sq) {
-	return Rank(sq / 8);
-}
-constexpr File toFile(Square sq) {
-	return File(int(sq) & 7);
-}
-
 // Gets First occupied Square on BitBoard
 constexpr Square toSquare(BitBoard bb){
 	return Square(bits::bitScanForward(bb));
@@ -135,6 +129,11 @@ constexpr bool isEmpty(BitBoard bb){
 // Checks if the given Square is empty.
 constexpr bool isFree(BitBoard bb, Square s) {
 	return isEmpty(bb & toBB(s));
+}
+
+// True if the given bitboard has more than one 1.
+constexpr bool more_than_one(BitBoard bb) {
+	return !isEmpty(bb & bb - 1);
 }
 
 // Shift BitBoard by 1 square

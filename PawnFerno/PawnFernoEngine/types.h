@@ -8,8 +8,8 @@
 // Direction + 9 and then lookup in this array yields the appropriate direction index.
 // -1 means no direction reaches this value.
 constexpr int DIRECTION_INDEXES[19] = { 3, 2, 1, -1, -1, -1, -1, -1, 4, -1, 0, -1, -1, -1, -1, -1, 5, 6, 7 };
-constexpr char RANK_CHARS[15] = { '1', '2', '3', '4', '5', '6', '7', '8', ' ', ' ', ' ', ' ', ' ', ' ', ' ' };
-constexpr char FILE_CHARS[15] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', ' ', ' ', ' ', ' ', ' ', ' ', ' ' };
+constexpr char RANK_CHARS[16] = { '1', '2', '3', '4', '5', '6', '7', '8', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ' };
+constexpr char FILE_CHARS[16] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ' };
 constexpr char PIECE_CHARS[8] = { 'p', 'n', 'b', 'r', 'q', 'k', ' ', ' ' };
 
 typedef uint64_t BitBoard;
@@ -69,17 +69,33 @@ enum class Castling {
 };
 
 /// <summary>
-/// Gives the index starting from east going clockwise of the given direction.
-/// </summary>
-constexpr int directionIndex(Direction d) {
-	return DIRECTION_INDEXES[d + 9];
-}
-
-/// <summary>
 /// Constructs the square residing on file f and rank r.
 /// </summary>
 constexpr Square toSquare(File f, Rank r) {
 	return Square((8 * r) + f);
+}
+
+// Get Rank, File from Square
+constexpr Rank toRank(Square sq) {
+	return Rank(sq / 8);
+}
+
+constexpr File toFile(Square sq) {
+	return File(int(sq) & 7);
+}
+
+/// <summary>
+/// Returns the relative direction of square b to origin a.
+/// </summary>
+constexpr Direction relativeDirection(Square a, Square b) {
+	return Direction(((toFile(b) - toFile(a)) & -0b1) + ((toRank(b) - toRank(a)) & -0b1));
+}
+
+/// <summary>
+/// Gives the index starting from east going clockwise of the given direction.
+/// </summary>
+constexpr int directionIndex(Direction d) {
+	return DIRECTION_INDEXES[d + 9];
 }
 
 /// <summary>
@@ -144,8 +160,6 @@ constexpr Castling toCastlingValue(char c) {
 	default: return Castling::None;
 	}
 }
-
-
 
 #define ENABLE_ADD_OPERATORS_ON(T)												\
 inline T operator+(T d1, int d2) { return T(int(d1) + d2); }					\

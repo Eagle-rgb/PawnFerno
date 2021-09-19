@@ -103,15 +103,60 @@ PieceType Position::getPieceOnAny(Square sq, Color& c) {
 }
 
 BitBoard Position::getEnemyAttacks() {
-	BitBoard ourPieces[6];
+	BitBoard enemyPieces[6];
 	BitBoard blockers = BB_wb[0] | BB_wb[1];
 
 	for (PieceType p = PAWN; p <= KING; ++p) {
-		ourPieces[p] = BB_pieces[p] & BB_wb[!player];
+		enemyPieces[p] = BB_pieces[p] & BB_wb[!player];
 	}
 
 	state->moveGenCheck |= generatedEnemyAttacks;
-	return (state->enemyAttacks = attacksOfAll(ourPieces, blockers, !player));
+	return (state->enemyAttacks = attacksOfAll(enemyPieces, blockers, !player));
+}
+
+BitBoard Position::getPinners() {
+	Square kingSquare = toSquare(BB_wb[player] & BB_pieces[KING]);
+	BitBoard pinnerRays = BB_EMPTY;
+	BitBoard checkingPieces = BB_EMPTY;
+
+	// Remember that only sliders can pin.
+
+	for (PieceType p = BISHOP; p <= QUEEN; ++p) {
+		BitBoard sliders = BB_wb[!player] & BB_pieces[p];
+		Square sq = SQNONE;
+
+		while ((sq = bits::popLSB(sliders)) != SQNONE) {
+			Direction toKing = relativeDirection(sq, kingSquare);
+
+			// Abort if this piece can not attack in that direction.
+			if (p == BISHOP && (abs(toKing) == 1 || abs(toKing) == 8)) continue;
+			else if (p == ROOK && (abs(toKing) == 7 || abs(toKing) == 9)) continue;
+
+			// Shoot ray from the piece to the king and backwards and see if they meet.
+			BitBoard shotToKing = RAYS[sq][toKing];
+			BitBoard shotFromKing = RAYS[kingSquare][-toKing];
+
+			if (isEmpty(shotToKing & shotFromKing)) continue;
+
+			BitBoard between = shotToKing & shotFromKing & BB_wb[player];
+
+			// No enemy piece may be in the line of sight of the pinner.
+			if (!isEmpty(between & BB_wb[!player])) continue;
+
+			// There can only be none or at most one piece in the line of sight.
+			if (more_than_one(between)) continue;
+
+			// If no piece is in the way this even is a checking piece (awesome :)).
+			if (isEmpty(between)) checkingPieces |= toBB(sq);
+
+			// Finally, this is a checking piece or a pinner (we will save the ray in both cases).
+			// Doing it this way will include the pinner's square and the king square.
+			pinnerRays |= sq | (shotToKing ^ RAYS[kingSquare][toKing]) | kingSquare;
+		}
+
+	}
+
+	return 0;
 }
 
 bool Position::inCheck() {

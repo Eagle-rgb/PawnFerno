@@ -26,6 +26,26 @@ private:
 	/// </summary>
 	void movePiece(Square origin, Square destination, PieceType, Color);
 
+	/// <summary>
+	/// Removes ("Captures") the piece.
+	/// </summary>
+	void removePiece(Square, PieceType, Color);
+
+	/// <summary>
+	/// Adds the given piece to the board.
+	/// </summary>
+	void addPiece(Square, PieceType, Color);
+
+	/// <summary>
+	/// Calculates and returns all legal pawn moves.
+	/// </summary>
+	std::vector<Move> getLegalPawnMoves(BitBoard checkRay);
+
+	/// <summary>
+	/// Calculates and returns all legal slider moves.
+	/// </summary>
+	std::vector<Move> getLegalSliderMoves(BitBoard checkRay);
+
 public:
 	State* state;
 
@@ -55,6 +75,27 @@ public:
 	PieceType getPieceOnAny(Square, Color&);
 
 	/// <summary>
+	/// Returns the blocker bitboard.
+	/// </summary>
+	inline BitBoard blockerBB() { return BB_wb[WHITE] | BB_wb[BLACK]; }
+
+	/// <summary>
+	/// Returns the piece BitBoard of the given piece for the current player.
+	/// </summary>
+	inline BitBoard playerPieceBBof(PieceType p) { return BB_wb[player] & BB_pieces[p]; }
+
+	/// <summary>
+	/// Returns the square of the king for the current player.
+	/// </summary>
+	inline Square kingSquare() { return toSquare(playerPieceBBof(KING)); }
+
+	/// <summary>
+	/// Calculates all squares being attacked by the given player and return them.
+	/// </summary>
+	/// <returns> BitBoard containing the attacked squares. </returns>
+	BitBoard getAttacksOf(Color who);
+
+	/// <summary>
 	/// Calculates all squares being attacked by the enemy and returns them.
 	/// </summary>
 	/// <returns> BitBoard containing the attacked squares. </returns>
@@ -73,6 +114,11 @@ public:
 	std::vector<Move> getLegalMoves();
 
 	/// <summary>
+	/// Calculates all legal moves and does all the prerequisites automatically :).
+	/// </summary>
+	std::vector<Move> getLegalMovesAuto();
+
+	/// <summary>
 	/// Returns true if the current player is in check.
 	/// PREREQUISITE: 0b1
 	/// </summary>
@@ -88,6 +134,16 @@ public:
 	/// PREREQUISITE: 0b100
 	/// </summary>
 	bool isPinned(Square);
+
+	/// <summary>
+	/// Tries the given move and return true if the resulting position remains legal.
+	/// </summary>
+	bool tryMove(Move);
+
+	/// <summary>
+	/// Determines whether a given move performs a capture.
+	/// </summary>
+	bool isCaptures(Move);
 
 	/// <summary>
 	/// Makes the given move on the board.

@@ -101,6 +101,17 @@ PieceType Position::getPieceOnAny(Square sq, Color& c) {
 	return PIECENONE;
 }
 
+BitBoard Position::getAttacksOf(Color who) {
+	BitBoard piecesOf[6];
+	BitBoard blockers = BB_wb[0] | BB_wb[1];
+
+	for (PieceType p = PAWN; p <= KING; ++p) {
+		piecesOf[p] = BB_pieces[p] & BB_wb[who];
+	}
+
+	return attacksOfAll(piecesOf, blockers, who);
+}
+
 BitBoard Position::getEnemyAttacks() {
 	BitBoard enemyPieces[6];
 	BitBoard blockers = BB_wb[0] | BB_wb[1];
@@ -177,19 +188,79 @@ void Position::makePinnersAndCheckers() {
 	state->moveGenCheck |= generatedCheckingPieces | generatedPinnedPieces;
 }
 
+std::vector<Move> Position::getLegalPawnMoves(BitBoard checkRay) {
+	BitBoard pawnBB = playerPieceBBof(PAWN);
+	BitBoard blockers = blockerBB();
+	Square sq = SQNONE;
+	std::vector<Move> moves;
+
+	// Pawn moves
+	while ((sq = bits::popLSB(pawnBB)) != SQNONE) {
+		BitBoard moveBB = PAWN_CAPTURES[player][sq] & BB_wb[!player];
+		BitBoard enPassantMoveBB = BB_EMPTY;
+
+		// Very compact way to determine if we can push our pawn, and if yes, then to which square.
+		moveBB |= PAWN_PUSHES[player][sq] & ~(blockers | (shift(blockers ^ toBB(sq), PAWN_DIRECTIONS[player])));
+
+		if (isPinned(sq)) {
+			moveBB &= RAYS[kingSquare()][relativeDirection(kingSquare(), sq)];
+		}
+
+		moveBB &= checkRay;
+
+		bool canEnPassant = false;
+		if (state->enPassant != SQNONE)
+			if (!isEmpty(moveBB & toBB(state->enPassant))) canEnPassant = true;
+
+		std::vector<Move> pawnMoves = move::makeNormalMoves(sq, moveBB);
+		
+		if (canEnPassant)
+			pawnMoves.push_back(move::makeEnPassantMove(sq, state->enPassant));
+
+		moves.insert(moves.end(), pawnMoves.begin(), pawnMoves.end());
+	}
+
+	return moves;
+}
+
+std::vector<Move> Position::getLegalSliderMoves(BitBoard checkRay) {
+	BitBoard blockers = blockerBB();
+	Square sq;
+
+	std::vector<Move> moves;
+
+	for (PieceType p = KNIGHT; p <= QUEEN; ++p) {
+		BitBoard pieceBB = playerPieceBBof(p);
+		while ((sq = bits::popLSB(pieceBB)) != SQNONE) {
+			BitBoard moveBB = attacksOf(sq, blockers, player, p);
+
+			// First mask. We can not capture our own pieces.
+			moveBB &= ~BB_wb[player];
+
+			// Second mask. We can only move on the pin ray.
+			if (isPinned(sq)) {
+				moveBB &= RAYS[kingSquare()][relativeDirection(kingSquare(), sq)];
+			}
+
+			moveBB &= checkRay;
+
+			std::vector<Move> pieceMoves = move::makeNormalMoves(sq, moveBB);
+
+			moves.insert(moves.end(), pieceMoves.begin(), pieceMoves.end());
+		}
+	}
+
+	return moves;
+}
+
 std::vector<Move> Position::getLegalMoves() {
 	assert((state->moveGenCheck & 0b111) == 0b111);
 
-	BitBoard ourPieces[6];
-	BitBoard blockers = BB_wb[WHITE] | BB_wb[BLACK];
+	BitBoard blockers = blockerBB();
 	Square kingSquare = toSquare(BB_wb[player] & BB_pieces[KING]);
 	Square sq = SQNONE;  // iterator square.
 
 	std::vector<Move> moves;
-
-	for (PieceType p = PAWN; p <= KING; ++p) {
-		ourPieces[p] = BB_pieces[p] & BB_wb[player];
-	}
 
 	if (!inDoubleCheck()) {
 		BitBoard checkRay = BB_FULL;
@@ -199,44 +270,11 @@ std::vector<Move> Position::getLegalMoves() {
 			checkRay = drawLine(kingSquare, checkingPiece) | state->checkingPieces;
 		}
 
-		// Pawn moves (no en passant)
-		while ((sq = bits::popLSB(ourPieces[PAWN])) != SQNONE) {
-			BitBoard moveBB = PAWN_CAPTURES[player][sq] & BB_wb[!player];
+		std::vector<Move> pawnMoves = getLegalPawnMoves(checkRay);
+		std::vector<Move> sliderMoves = getLegalSliderMoves(checkRay);
 
-			// Very compact way to determine if we can push our pawn, and if yes, then to which square.
-			moveBB |= PAWN_PUSHES[player][sq] & ~(blockers | (shift(blockers ^ toBB(sq), PAWN_DIRECTIONS[player])));
-
-			if (isPinned(sq)) {
-				moveBB &= RAYS[kingSquare][relativeDirection(kingSquare, sq)];
-			}
-
-			moveBB &= checkRay;
-
-			std::vector<Move> pawnMoves = move::makeNormalMoves(sq, moveBB);
-
-			moves.insert(moves.end(), pawnMoves.begin(), pawnMoves.end());
-		}
-
-		// Knight and slider moves
-		for (PieceType p = KNIGHT; p <= QUEEN; ++p) {
-			while ((sq = bits::popLSB(ourPieces[p])) != SQNONE) {
-				BitBoard moveBB = attacksOf(sq, blockers, player, p);
-
-				// First mask. We can not capture our own pieces.
-				moveBB &= ~BB_wb[player];
-
-				// Second mask. We can only move on the pin ray.
-				if (isPinned(sq)) {
-					moveBB &= RAYS[kingSquare][relativeDirection(kingSquare, sq)];
-				}
-
-				moveBB &= checkRay;
-
-				std::vector<Move> pieceMoves = move::makeNormalMoves(sq, moveBB);
-
-				moves.insert(moves.end(), pieceMoves.begin(), pieceMoves.end());
-			}
-		}
+		moves.insert(moves.end(), pawnMoves.begin(), pawnMoves.end());
+		moves.insert(moves.end(), sliderMoves.begin(), sliderMoves.end());
 	}
 
 	// King moves.
@@ -251,6 +289,12 @@ std::vector<Move> Position::getLegalMoves() {
 	state->moveGenCheck |= generatedLegalMoves;
 
 	return moves;
+}
+
+std::vector<Move> Position::getLegalMovesAuto() {
+	getEnemyAttacks();
+	makePinnersAndCheckers();
+	return getLegalMoves();
 }
 
 bool Position::inCheck() {
@@ -268,11 +312,43 @@ bool Position::isPinned(Square sq) {
 	return !isFree(state->pinnedPieces, sq);
 }
 
+bool Position::tryMove(Move m) {
+	State temp = State();
+
+	makeMove(m, temp);
+	BitBoard ourAttacks = getAttacksOf(player);
+
+	if (!isEmpty(ourAttacks & BB_wb[!player] & BB_pieces[KING])) {
+		undoMove(m);
+		return false;
+	}
+
+	undoMove(m);
+	return true;
+}
+
+bool Position::isCaptures(Move m) {
+	BitBoard enemies = BB_wb[!player];
+	BitBoard destination = BitBoard(move::destinationSquare(m));
+
+	return (!isEmpty(enemies & destination));
+}
+
 void Position::movePiece(Square origin, Square destination, PieceType piece, Color who) {
 	BitBoard orDesBB = toBB(origin) | toBB(destination);
 
 	BB_wb[who] ^= orDesBB;
 	BB_pieces[piece] ^= orDesBB;
+}
+
+void Position::removePiece(Square sq, PieceType piece, Color who) {
+	BB_wb[who] ^= toBB(sq);
+	BB_pieces[piece] ^= toBB(sq);
+}
+
+void Position::addPiece(Square sq, PieceType piece, Color who) {
+	BB_wb[who] |= toBB(sq);
+	BB_pieces[piece] |= toBB(sq);
 }
 
 void Position::makeMove(const Move m, State& newState) {
@@ -283,6 +359,19 @@ void Position::makeMove(const Move m, State& newState) {
 
 	newState.previousState = state;
 	state = &newState;
+
+	if (capturedPiece != PIECENONE) {
+		removePiece(destinationSquare, capturedPiece, !player);
+	}
+
+	if (move::isEnPassant(m)) {
+		removePiece(enPassantPawnSquare(destinationSquare, player), PAWN, !player);
+	}
+
+	// Check if it was a double push -> update enPassant state.
+	if (movedPiece == PAWN && squareDistanceNonDiag(originSquare, destinationSquare) >= 2) {
+		state->enPassant = enPassantToSquare(destinationSquare, player);
+	}
 
 	// TODO assert that there is actually a piece standing on originSquare and no piece on destinationSquare.
 	movePiece(originSquare, destinationSquare, movedPiece, player);
@@ -304,6 +393,14 @@ void Position::undoMove(const Move m) {
 	PieceType capturedPiece = state -> capturedPiece;
 
 	Color playerWhoMoved = !player;
+
+	if (capturedPiece != PIECENONE) {
+		addPiece(destinationSquare, capturedPiece, player);
+	}
+
+	if (move::isEnPassant(m)) {
+		addPiece(enPassantPawnSquare(destinationSquare, playerWhoMoved), PAWN, player);
+	}
 
 	// Move the piece from the destination square to the origin square.
 	movePiece(destinationSquare, originSquare, movedPiece, playerWhoMoved);

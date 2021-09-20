@@ -4,6 +4,7 @@
 #define TYPES_INCLUDE
 
 #include <cstdint>
+#include <cstdlib>
 
 // Direction + 9 and then lookup in this array yields the appropriate direction index.
 // -1 means no direction reaches this value.
@@ -92,6 +93,13 @@ constexpr Direction relativeDirection(Square a, Square b) {
 	int y = toRank(b) - toRank(a) > 0 ? 8 : (toRank(b) - toRank(a) < 0 ? -8 : 0);
 	return Direction(x + y);
 }
+
+inline int squareDistanceNonDiag(Square a, Square b) {
+	return abs(toFile(b) - toFile(a)) + abs(toRank(b) - toRank(a));
+}
+
+/// <summary>
+/// Returns true if the 
 
 /// <summary>
 /// Gives the index starting from east going clockwise of the given direction.

@@ -142,6 +142,14 @@ constexpr BitBoard drawLine(Square a, Square b) {
 	return RAYS[a][directionIndex(relDir)] & RAYS[b][directionIndex(-relDir)];
 }
 
+inline Square enPassantPawnSquare(Square enPassantTo, Color attacker) {
+	return enPassantTo + PAWN_DIRECTIONS[attacker];
+}
+
+inline Square enPassantToSquare(Square doublePushedPawn, Color mover) {
+	return doublePushedPawn + -PAWN_DIRECTIONS[mover];
+}
+
 // TODO
 //constexpr bool aligned(Square a, Square b, Square c)
 

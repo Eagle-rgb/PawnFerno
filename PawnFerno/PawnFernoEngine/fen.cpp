@@ -64,8 +64,8 @@ namespace fen {
 		assert('1' <= s[1] && '8' >= s[1]);
 
 		// Is valid, we can calculate an actual square.
-		Rank rank = Rank(s[0] - 'a');
-		File file = File(s[1] - '1');
+		File file = File(s[0] - 'a');
+		Rank rank = Rank(s[1] - '1');
 
 		return toSquare(file, rank);
 	}

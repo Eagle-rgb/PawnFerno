@@ -26,7 +26,32 @@ namespace printing {
         return result;
     }
 
-    std::string print(Square sq) { return print(toBB(sq)); }
+    std::string print(Square sq) {
+        std::string x = "";
+        char fileRank[2];
+        x += fileChar(toFile(sq));
+        x += rankChar(toRank(sq));
+
+        return x;
+    }
+
+    std::string print(Move m) {
+        std::string x = print(SQa2);
+        return print(move::originSquare(m)) + print(move::destinationSquare(m));
+    }
+
+    std::string print(std::vector<Move> moves) {
+        std::vector<Move>::iterator it;
+        std::string result = "";
+
+        for (it = moves.begin(); it <= moves.end(); ++it) {
+            result += print(*it);
+        }
+
+        return result;
+    }
+
+    std::string printSquareBB(Square sq) { return print(toBB(sq)); }
 
     std::string printBoard(const std::string charBB) {
         std::string result = "";

@@ -4,6 +4,7 @@
 #define MAIN_INCLUDED
 
 #include "position.h"
+#include "perft.h"
 #include <iostream>
 
 #endif

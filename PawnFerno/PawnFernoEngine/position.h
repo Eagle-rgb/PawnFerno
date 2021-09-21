@@ -19,6 +19,7 @@ private:
 	BitBoard BB_pieces[6];
 
 	Color player;
+	State* state;
 
 	/// <summary>
 	/// Moves the given piece from the origin to destination. Does not perform any assertions!.
@@ -46,9 +47,9 @@ private:
 	/// </summary>
 	std::vector<Move> getLegalSliderMoves(BitBoard checkRay);
 
-public:
-	State* state;
+	std::vector<Move> getLegalCastlings();
 
+public:
 	Position(State*);
 	Position(std::string fen, State*);
 

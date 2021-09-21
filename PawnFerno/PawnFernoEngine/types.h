@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <cstdlib>
+#include <string>
 
 // Direction + 9 and then lookup in this array yields the appropriate direction index.
 // -1 means no direction reaches this value.
@@ -69,6 +70,12 @@ enum class Castling {
 	q = 0b1000
 };
 
+enum class SCastling {
+	None = 0,
+	K = 0b1,
+	Q = 0b10
+};
+
 /// <summary>
 /// Constructs the square residing on file f and rank r.
 /// </summary>
@@ -96,6 +103,12 @@ constexpr Direction relativeDirection(Square a, Square b) {
 
 inline int squareDistanceNonDiag(Square a, Square b) {
 	return abs(toFile(b) - toFile(a)) + abs(toRank(b) - toRank(a));
+}
+
+inline int squareDistance(Square a, Square b) {
+	int fileDistance = abs(toFile(b) - toFile(a));
+	int rankDistance = abs(toRank(b) - toRank(a));
+	return fileDistance > rankDistance ? fileDistance : rankDistance;
 }
 
 /// <summary>
@@ -169,6 +182,10 @@ constexpr Castling toCastlingValue(char c) {
 	case 'q': return Castling::Q;
 	default: return Castling::None;
 	}
+}
+
+constexpr int castlingIndex(Color who, SCastling c) {
+	return ((short)c + 2 * (short)who) - 1;
 }
 
 #define ENABLE_ADD_OPERATORS_ON(T)												\

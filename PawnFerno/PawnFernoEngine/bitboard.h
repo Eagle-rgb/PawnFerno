@@ -33,6 +33,12 @@ constexpr BitBoard BB_FILEH = BB_FILEA << 7;
 
 constexpr BitBoard BB_BORDER = BB_FILEA | BB_FILEH | BB_RANK1 | BB_RANK8;
 
+constexpr Square KING_START_SQUARES[2] = { SQe1, SQe8 };
+constexpr Square ROOK_START_SQUARES[4] = { SQh1, SQa1, SQh8, SQa8 };
+constexpr BitBoard BB_CASTLING_PATHS[4] = { BB_a1 << SQf1 | BB_a1 << SQg1, BB_a1 << SQc1 | BB_a1 << SQd1, BB_a1 << SQf8 | BB_a1 << SQg8, BB_a1 << SQc8 | BB_a1 << SQd8 };
+constexpr Square ROOK_CASTLING_DESTINATIONS[4] = { SQf1, SQd1, SQf8, SQd8 };
+constexpr Square KING_CASTLING_DESTINATIONS[4] = { SQg1, SQc1, SQg8, SQc8 };
+
 constexpr Direction DIRECTIONS[8] = { EAST, SOUTHEAST, SOUTH, SOUTHWEST, WEST, NORTHWEST, NORTH, NORTHEAST };
 constexpr BitBoard DIRECTION_LIMITS[8] = { BB_FILEH, BB_FILEH | BB_RANK1, BB_RANK1, BB_FILEA | BB_RANK1,
 	BB_FILEA, BB_FILEA | BB_RANK8, BB_RANK8, BB_FILEH | BB_RANK8 };
@@ -136,6 +142,10 @@ constexpr bool more_than_one(BitBoard bb) {
 	return !isEmpty(bb & bb - 1);
 }
 
+inline bool canPromote(Color who, Square pawnSquare) {
+	return !isFree(BB_RANK2 << (8 * 5 * (short)!who), pawnSquare);
+}
+
 // Draws a line from a to b excluding both endpoints.
 constexpr BitBoard drawLine(Square a, Square b) {
 	Direction relDir = relativeDirection(a, b);
@@ -148,6 +158,26 @@ inline Square enPassantPawnSquare(Square enPassantTo, Color attacker) {
 
 inline Square enPassantToSquare(Square doublePushedPawn, Color mover) {
 	return doublePushedPawn + -PAWN_DIRECTIONS[mover];
+}
+
+constexpr BitBoard castlingPath(Color who, SCastling c) {
+	return BB_CASTLING_PATHS[castlingIndex(who ,c)];
+}
+
+constexpr Square castlingRookDestination(Color who, SCastling c) {
+	return ROOK_CASTLING_DESTINATIONS[castlingIndex(who, c)];
+}
+
+constexpr Square castlingKingDestination(Color who, SCastling c) {
+	return KING_CASTLING_DESTINATIONS[castlingIndex(who, c)];
+}
+
+constexpr Square castlingRookOrigin(Color who, SCastling c) {
+	return ROOK_START_SQUARES[castlingIndex(who, c)];
+}
+
+constexpr Square castlingKingOrigin(Color who) {
+	return KING_START_SQUARES[(short)who];
 }
 
 // TODO

@@ -145,11 +145,11 @@ void Position::makePinnersAndCheckers() {
 
 			// Shoot ray from the piece to the king and backwards and see if they meet.
 			BitBoard shotToKing = RAYS[sq][directionIndex(toKing)];
-			BitBoard shotFromKing = RAYS[kingSquare][directionIndex(-toKing)];
+			BitBoard shotFromKing = RAYS[kingSquare][directionIndex(-toKing)] | toBB(kingSquare);
 
 			if (isEmpty(shotToKing & shotFromKing)) continue;
 
-			BitBoard between = shotToKing & shotFromKing & BB_wb[player];
+			BitBoard between = shotToKing & shotFromKing & BB_wb[player] & ~toBB(kingSquare);
 
 			// No enemy piece may be in the line of sight of the pinner.
 			if (!isEmpty(between & BB_wb[!player])) continue;
@@ -208,15 +208,22 @@ std::vector<Move> Position::getLegalPawnMoves(BitBoard checkRay) {
 
 		moveBB &= checkRay;
 
-		bool canEnPassant = false;
-		if (state->enPassant != SQNONE)
-			if (!isEmpty(moveBB & toBB(state->enPassant))) canEnPassant = true;
+		if (canPromote(player, sq)) {
+			std::vector<Move> pawnMoves = move::makePromotions(sq, moveBB);
+			moves.insert(moves.end(), pawnMoves.begin(), pawnMoves.end());
+			continue;
+		}
 
 		std::vector<Move> pawnMoves = move::makeNormalMoves(sq, moveBB);
-		
-		if (canEnPassant)
-			pawnMoves.push_back(move::makeEnPassantMove(sq, state->enPassant));
 
+		// Can en passant.
+		if (state->enPassant != SQNONE && !isEmpty(PAWN_CAPTURES[player][sq] & toBB(state->enPassant))) {
+			Move enPassant = move::makeEnPassantMove(sq, state->enPassant);
+			if (tryMove(enPassant)) {
+				pawnMoves.push_back(move::makeEnPassantMove(sq, state->enPassant));
+			}
+		}
+			
 		moves.insert(moves.end(), pawnMoves.begin(), pawnMoves.end());
 	}
 
@@ -253,6 +260,26 @@ std::vector<Move> Position::getLegalSliderMoves(BitBoard checkRay) {
 	return moves;
 }
 
+std::vector<Move> Position::getLegalCastlings() {
+	std::vector<Move> moves;
+	short castlingRights = state->castlingRights;
+	BitBoard enemyAttacks = state->enemyAttacks;
+	BitBoard blockers = enemyAttacks | blockerBB();
+
+	short kingSideCastling = (short)Castling::K << ((short)player * 2);
+	short queenSideCastling = (short)Castling::Q << ((short)player * 2);
+
+	short ccc = castlingIndex(BLACK, SCastling::K);
+
+	if (castlingRights & kingSideCastling && isEmpty(blockers & castlingPath(player, SCastling::K)))
+		moves.push_back(move::makeCastlingMove(player, SCastling::K));
+
+	if (castlingRights & queenSideCastling && isEmpty(blockers & castlingPath(player, SCastling::Q)))
+		moves.push_back(move::makeCastlingMove(player, SCastling::Q));
+	
+	return moves;
+}
+
 std::vector<Move> Position::getLegalMoves() {
 	assert((state->moveGenCheck & 0b111) == 0b111);
 
@@ -284,6 +311,12 @@ std::vector<Move> Position::getLegalMoves() {
 
 	std::vector<Move> kingMoves = move::makeNormalMoves(kingSquare, moveBB);
 	moves.insert(moves.end(), kingMoves.begin(), kingMoves.end());
+
+	// Castlings.
+	if (!inCheck()) {
+		std::vector<Move> castlings = getLegalCastlings();
+		moves.insert(moves.end(), castlings.begin(), castlings.end());
+	}
 
 	state->legalMoves = moves;
 	state->moveGenCheck |= generatedLegalMoves;
@@ -355,10 +388,14 @@ void Position::makeMove(const Move m, State& newState) {
 	Square originSquare = move::originSquare(m);
 	Square destinationSquare = move::destinationSquare(m);
 	PieceType movedPiece = getPieceOn(originSquare);
-	PieceType capturedPiece = getPieceOn(destinationSquare);
+	PieceType capturedPiece = getPieceOn(destinationSquare, !player);
 
 	newState.previousState = state;
 	state = &newState;
+
+	state->castlingRights = state->previousState->castlingRights;
+	state->enPassant = SQNONE;
+	state->moveGenCheck = 0;
 
 	if (capturedPiece != PIECENONE) {
 		removePiece(destinationSquare, capturedPiece, !player);
@@ -368,13 +405,64 @@ void Position::makeMove(const Move m, State& newState) {
 		removePiece(enPassantPawnSquare(destinationSquare, player), PAWN, !player);
 	}
 
+	if (movedPiece == PAWN) {
+		// Check if it was a double push -> update enPassant state.
+		if (squareDistance(originSquare, destinationSquare) >= 2) {
+			state->enPassant = enPassantToSquare(destinationSquare, player);
+		}
+
+		// Check for promotion.
+		if (move::isPromotion(m)) {
+			PieceType promotionPiece = move::getPromotionPiece(m);
+
+			addPiece(destinationSquare, promotionPiece, player);
+			removePiece(originSquare, PAWN, player);
+		}
+	}
+
 	// Check if it was a double push -> update enPassant state.
-	if (movedPiece == PAWN && squareDistanceNonDiag(originSquare, destinationSquare) >= 2) {
-		state->enPassant = enPassantToSquare(destinationSquare, player);
+
+	// If king move, then remove castling rights.
+	if (movedPiece == KING) {
+		// Only the other player has his castling rights.
+		state->castlingRights &= 0b11 << (2 * (short)!player);
+
+		if (move::isCastling(m)) {
+			// Move the rook.
+			
+			SCastling castlingType = move::castlingTypeFromMove(m);
+			Square rookOrigin = castlingRookOrigin(player, castlingType);
+			Square rookDestination = castlingRookDestination(player, castlingType);
+
+			movePiece(rookOrigin, rookDestination, ROOK, player);
+		}
+	}
+
+	// Remove castling rights for the appropriate origin square.
+	if (movedPiece == ROOK) {
+		if (originSquare == castlingRookOrigin(player, SCastling::K)) {
+			state->castlingRights &= ~((short)SCastling::K << 2 * (short)player);
+		}
+
+		if (originSquare == castlingRookOrigin(player, SCastling::Q)) {
+			state->castlingRights &= ~((short)SCastling::Q << 2 * (short)player);
+		}
+	}
+
+	// Remove castling for the enemy if one of the enemy rook squares is "captured".
+	if (destinationSquare == castlingRookOrigin(!player, SCastling::K)) {
+		state->castlingRights &= ~((short)SCastling::K << 2 * (short)player);
+	}
+
+	if (destinationSquare == castlingRookOrigin(!player, SCastling::Q)) {
+		state->castlingRights &= ~((short)SCastling::Q << 2 * (short)player);
 	}
 
 	// TODO assert that there is actually a piece standing on originSquare and no piece on destinationSquare.
-	movePiece(originSquare, destinationSquare, movedPiece, player);
+
+	// We dont want to move the pawn if it is a promotion.
+	if (!move::isPromotion(m))
+		movePiece(originSquare, destinationSquare, movedPiece, player);
 
 	state -> capturedPiece = capturedPiece;
 	player = !player;
@@ -394,16 +482,32 @@ void Position::undoMove(const Move m) {
 
 	Color playerWhoMoved = !player;
 
-	if (capturedPiece != PIECENONE) {
-		addPiece(destinationSquare, capturedPiece, player);
-	}
-
 	if (move::isEnPassant(m)) {
 		addPiece(enPassantPawnSquare(destinationSquare, playerWhoMoved), PAWN, player);
 	}
 
+	if (move::isCastling(m)) {
+		SCastling castlingType = move::castlingTypeFromMove(m);
+		Square rookDestination = castlingRookDestination(playerWhoMoved, castlingType);
+		Square rookOrigin = castlingRookOrigin(playerWhoMoved, castlingType);
+
+		movePiece(rookDestination, rookOrigin, ROOK, playerWhoMoved);
+	}
+
+	if (move::isPromotion(m)) {
+		// Trick:: Remove the promotion piece, add a pawn instead and then we will move the pawn afterwards.
+		PieceType promotionPiece = move::getPromotionPiece(m);
+
+		removePiece(destinationSquare, promotionPiece, playerWhoMoved);
+		addPiece(destinationSquare, PAWN, playerWhoMoved);
+	}
+
 	// Move the piece from the destination square to the origin square.
 	movePiece(destinationSquare, originSquare, movedPiece, playerWhoMoved);
+
+	// Add the captured piece back to the board.
+	if (capturedPiece != PIECENONE)
+		addPiece(destinationSquare, capturedPiece, player);
 
 	state = state->previousState;
 

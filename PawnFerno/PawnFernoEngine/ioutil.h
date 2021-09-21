@@ -7,6 +7,7 @@
 #include <string>
 #include "misc.h"
 #include "fen.h"
+#include "move.h"
 #include <iostream>
 
 /*inline std::ostream& operator<<(std::ostream& os, const BitBoard& bb) {
@@ -25,9 +26,15 @@ namespace printing {
 	std::string print(BitBoard);
 
 	/// <summary>
-	/// Prints the square BitBoard of the given square.
+	/// Prints the square.
 	/// </summary>
 	std::string print(Square);
+
+	std::string print(Move);
+
+	std::string print(std::vector<Move>);
+	
+	std::string printSquareBB(Square);
 
 	/// <summary>
 	/// Prints a given charBB in a fancy way. (see Position::charBB)

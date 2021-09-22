@@ -3,12 +3,14 @@
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
-.obj
-.iobj
-.tlog
-.exe
-.pdb
-.exe.recipe
+*.obj
+*.iobj
+*.tlog
+*.exe
+*.pdb
+*.exe.recipe
+*.log
+*.ipdb
 
 PawnFerno/Debug
 PawnFerno/.vs

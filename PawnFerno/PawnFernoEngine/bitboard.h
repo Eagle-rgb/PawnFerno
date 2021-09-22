@@ -35,7 +35,12 @@ constexpr BitBoard BB_BORDER = BB_FILEA | BB_FILEH | BB_RANK1 | BB_RANK8;
 
 constexpr Square KING_START_SQUARES[2] = { SQe1, SQe8 };
 constexpr Square ROOK_START_SQUARES[4] = { SQh1, SQa1, SQh8, SQa8 };
-constexpr BitBoard BB_CASTLING_PATHS[4] = { BB_a1 << SQf1 | BB_a1 << SQg1, BB_a1 << SQc1 | BB_a1 << SQd1, BB_a1 << SQf8 | BB_a1 << SQg8, BB_a1 << SQc8 | BB_a1 << SQd8 };
+constexpr BitBoard BB_CASTLING_PATHS[4] = { 
+	BB_a1 << SQf1 | BB_a1 << SQg1,
+	BB_a1 << SQb1 | BB_a1 << SQc1 | BB_a1 << SQd1,
+	BB_a1 << SQf8 | BB_a1 << SQg8,
+	BB_a1 << SQb8 | BB_a1 << SQc8 | BB_a1 << SQd8 };
+
 constexpr Square ROOK_CASTLING_DESTINATIONS[4] = { SQf1, SQd1, SQf8, SQd8 };
 constexpr Square KING_CASTLING_DESTINATIONS[4] = { SQg1, SQc1, SQg8, SQc8 };
 
@@ -152,14 +157,29 @@ constexpr BitBoard drawLine(Square a, Square b) {
 	return RAYS[a][directionIndex(relDir)] & RAYS[b][directionIndex(-relDir)];
 }
 
+/// <summary>
+/// Returns the Square where the pawn, which gets en-passane'd, stands, if the attacking pawn ends up on enPassantTo.
+/// </summary>
+/// <param name="enPassantTo"> The target square of the attacking pawn. </param>
+/// <param name="attacker"> The player attacking. </param>
 inline Square enPassantPawnSquare(Square enPassantTo, Color attacker) {
-	return enPassantTo + PAWN_DIRECTIONS[attacker];
+	// The square is always one north of south of the square the captured pawn is standing on.
+	return enPassantTo + PAWN_DIRECTIONS[!attacker];
 }
 
+/// <summary>
+/// Returns the Square a pawn that enPassant's will end up on, if it tries to enPassant the pawn standing on doublePushedPawn.
+/// This function is used to determine the enPassant square after a double push pawn move. It is always one behind the destination square.
+/// </summary>
+/// <param name="doublePushedPawn"> The square of the pawn that should get enPassant - captured. </param>
+/// <param name="mover"> The player who did the double push. </param>
 inline Square enPassantToSquare(Square doublePushedPawn, Color mover) {
-	return doublePushedPawn + -PAWN_DIRECTIONS[mover];
+	return doublePushedPawn + PAWN_DIRECTIONS[!mover];
 }
 
+/// <summary>
+/// Returns the squares between the king and the rook, depending where to castle.
+/// </summary>
 constexpr BitBoard castlingPath(Color who, SCastling c) {
 	return BB_CASTLING_PATHS[castlingIndex(who ,c)];
 }

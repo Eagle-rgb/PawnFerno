@@ -16,6 +16,7 @@ void perft(Position* p, int depth) {
 }
 
 int perftRec(Position* p, int depth, bool first) {
+	//std::cout << std::endl << p->print();
 	if (depth == 0) return 1;
 	std::vector<Move> legalMoves = p->getLegalMovesAuto();
 	std::vector<Move>::iterator it;
@@ -33,7 +34,7 @@ int perftRec(Position* p, int depth, bool first) {
 		totalNodes += nodes;
 
 		if (first) {
-			std::cout << printing::print(m) << ": " << nodes << std::endl;
+			std::cout << printing::print(m, p->playerToMove()) << ": " << nodes << std::endl;
 		}
 	}
 

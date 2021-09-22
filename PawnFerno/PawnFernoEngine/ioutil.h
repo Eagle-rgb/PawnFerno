@@ -30,9 +30,9 @@ namespace printing {
 	/// </summary>
 	std::string print(Square);
 
-	std::string print(Move);
+	std::string print(Move, Color);
 
-	std::string print(std::vector<Move>);
+	std::string print(std::vector<Move>, Color);
 	
 	std::string printSquareBB(Square);
 

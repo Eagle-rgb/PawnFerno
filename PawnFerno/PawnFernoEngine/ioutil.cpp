@@ -35,17 +35,21 @@ namespace printing {
         return x;
     }
 
-    std::string print(Move m) {
-        std::string x = print(SQa2);
+    std::string print(Move m, Color player) {
+        if (move::isPromotion(m)) {
+            char promotionPiece = toChar(move::getPromotionPiece(m), player);
+            return print(move::originSquare(m)) + print(move::destinationSquare(m)) + promotionPiece;
+        }
+
         return print(move::originSquare(m)) + print(move::destinationSquare(m));
     }
 
-    std::string print(std::vector<Move> moves) {
+    std::string print(std::vector<Move> moves, Color who) {
         std::vector<Move>::iterator it;
         std::string result = "";
 
         for (it = moves.begin(); it <= moves.end(); ++it) {
-            result += print(*it);
+            result += print(*it, who);
         }
 
         return result;

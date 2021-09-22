@@ -17,7 +17,7 @@ constexpr char PIECE_CHARS[8] = { 'p', 'n', 'b', 'r', 'q', 'k', ' ', ' ' };
 typedef uint64_t BitBoard;
 
 // First 5 bits are the origin square, next 5 bits are the destination square.
-typedef short Move;
+typedef unsigned short Move;
 
 enum Square {
 	SQa1, SQb1, SQc1, SQd1, SQe1, SQf1, SQg1, SQh1,

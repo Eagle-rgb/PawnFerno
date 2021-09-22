@@ -58,6 +58,8 @@ public:
 	/// </summary>
 	void clear();
 
+	Color playerToMove();
+
 	/// <summary>
 	/// Returns the piece standing on the given square for the current player.
 	/// </summary>
@@ -92,9 +94,10 @@ public:
 
 	/// <summary>
 	/// Calculates all squares being attacked by the given player and return them.
+	/// Optionally, one may exclude the enemies king from the board.
 	/// </summary>
 	/// <returns> BitBoard containing the attacked squares. </returns>
-	BitBoard getAttacksOf(Color who);
+	BitBoard getAttacksOf(Color who, bool excludeKing = false);
 
 	/// <summary>
 	/// Calculates all squares being attacked by the enemy and returns them.

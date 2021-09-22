@@ -67,9 +67,9 @@ namespace move {
 		return PieceType(piece + 1);
 	}
 
-	constexpr bool isEnPassant(Move m) { return ((short)m & enPassant) == enPassant; }
+	constexpr bool isEnPassant(Move m) { return ((short)m & promotion) == enPassant; }
 
-	constexpr bool isCastling(Move m) { return ((short)m & castling) == castling; }
+	constexpr bool isCastling(Move m) { return ((short)m & promotion) == castling; }
 
 	constexpr bool isPromotion(Move m) { return ((short)m & promotion) == promotion; }
 

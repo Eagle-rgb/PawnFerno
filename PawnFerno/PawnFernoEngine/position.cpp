@@ -77,6 +77,10 @@ void Position::clear() {
 	player = WHITE;
 }
 
+Color Position::playerToMove() {
+	return player;
+}
+
 PieceType Position::getPieceOn(Square sq) {
 	return getPieceOn(sq, player);
 }
@@ -101,9 +105,11 @@ PieceType Position::getPieceOnAny(Square sq, Color& c) {
 	return PIECENONE;
 }
 
-BitBoard Position::getAttacksOf(Color who) {
+BitBoard Position::getAttacksOf(Color who, bool excludeKing) {
 	BitBoard piecesOf[6];
 	BitBoard blockers = BB_wb[0] | BB_wb[1];
+
+	if (excludeKing) blockers &= ~(BB_wb[!who] & BB_pieces[KING]);
 
 	for (PieceType p = PAWN; p <= KING; ++p) {
 		piecesOf[p] = BB_pieces[p] & BB_wb[who];
@@ -115,6 +121,8 @@ BitBoard Position::getAttacksOf(Color who) {
 BitBoard Position::getEnemyAttacks() {
 	BitBoard enemyPieces[6];
 	BitBoard blockers = BB_wb[0] | BB_wb[1];
+
+	blockers &= ~(BB_wb[player] & BB_pieces[KING]);
 
 	for (PieceType p = PAWN; p <= KING; ++p) {
 		enemyPieces[p] = BB_pieces[p] & BB_wb[!player];
@@ -149,10 +157,10 @@ void Position::makePinnersAndCheckers() {
 
 			if (isEmpty(shotToKing & shotFromKing)) continue;
 
-			BitBoard between = shotToKing & shotFromKing & BB_wb[player] & ~toBB(kingSquare);
-
 			// No enemy piece may be in the line of sight of the pinner.
-			if (!isEmpty(between & BB_wb[!player])) continue;
+			if (!isEmpty(shotFromKing & shotToKing & BB_wb[!player])) continue;
+
+			BitBoard between = shotToKing & shotFromKing & BB_wb[player] & ~toBB(kingSquare);
 
 			// There can only be none or at most one piece in the line of sight.
 			if (more_than_one(between)) continue;
@@ -203,7 +211,7 @@ std::vector<Move> Position::getLegalPawnMoves(BitBoard checkRay) {
 		moveBB |= PAWN_PUSHES[player][sq] & ~(blockers | (shift(blockers ^ toBB(sq), PAWN_DIRECTIONS[player])));
 
 		if (isPinned(sq)) {
-			moveBB &= RAYS[kingSquare()][relativeDirection(kingSquare(), sq)];
+			moveBB &= RAYS[kingSquare()][directionIndex(relativeDirection(kingSquare(), sq))];
 		}
 
 		moveBB &= checkRay;
@@ -246,7 +254,7 @@ std::vector<Move> Position::getLegalSliderMoves(BitBoard checkRay) {
 
 			// Second mask. We can only move on the pin ray.
 			if (isPinned(sq)) {
-				moveBB &= RAYS[kingSquare()][relativeDirection(kingSquare(), sq)];
+				moveBB &= RAYS[kingSquare()][directionIndex(relativeDirection(kingSquare(), sq))];
 			}
 
 			moveBB &= checkRay;
@@ -263,13 +271,14 @@ std::vector<Move> Position::getLegalSliderMoves(BitBoard checkRay) {
 std::vector<Move> Position::getLegalCastlings() {
 	std::vector<Move> moves;
 	short castlingRights = state->castlingRights;
-	BitBoard enemyAttacks = state->enemyAttacks;
+
+	// We do not care if the squares b1 or b8 are under attack. We can castle nontheless.
+	// In general, this means we can disregard the B File.
+	BitBoard enemyAttacks = state->enemyAttacks &~ BB_FILEB;
 	BitBoard blockers = enemyAttacks | blockerBB();
 
 	short kingSideCastling = (short)Castling::K << ((short)player * 2);
 	short queenSideCastling = (short)Castling::Q << ((short)player * 2);
-
-	short ccc = castlingIndex(BLACK, SCastling::K);
 
 	if (castlingRights & kingSideCastling && isEmpty(blockers & castlingPath(player, SCastling::K)))
 		moves.push_back(move::makeCastlingMove(player, SCastling::K));
@@ -308,7 +317,6 @@ std::vector<Move> Position::getLegalMoves() {
 	BitBoard moveBB = KING_ATTACKS[kingSquare];
 	moveBB &= ~state->enemyAttacks;
 	moveBB &= ~BB_wb[player];
-
 	std::vector<Move> kingMoves = move::makeNormalMoves(kingSquare, moveBB);
 	moves.insert(moves.end(), kingMoves.begin(), kingMoves.end());
 
@@ -401,11 +409,11 @@ void Position::makeMove(const Move m, State& newState) {
 		removePiece(destinationSquare, capturedPiece, !player);
 	}
 
-	if (move::isEnPassant(m)) {
-		removePiece(enPassantPawnSquare(destinationSquare, player), PAWN, !player);
-	}
-
 	if (movedPiece == PAWN) {
+		if (move::isEnPassant(m)) {
+			removePiece(enPassantPawnSquare(destinationSquare, player), PAWN, !player);
+		}
+
 		// Check if it was a double push -> update enPassant state.
 		if (squareDistance(originSquare, destinationSquare) >= 2) {
 			state->enPassant = enPassantToSquare(destinationSquare, player);
@@ -451,11 +459,11 @@ void Position::makeMove(const Move m, State& newState) {
 
 	// Remove castling for the enemy if one of the enemy rook squares is "captured".
 	if (destinationSquare == castlingRookOrigin(!player, SCastling::K)) {
-		state->castlingRights &= ~((short)SCastling::K << 2 * (short)player);
+		state->castlingRights &= ~((short)SCastling::K << 2 * (short)!player);
 	}
 
 	if (destinationSquare == castlingRookOrigin(!player, SCastling::Q)) {
-		state->castlingRights &= ~((short)SCastling::Q << 2 * (short)player);
+		state->castlingRights &= ~((short)SCastling::Q << 2 * (short)!player);
 	}
 
 	// TODO assert that there is actually a piece standing on originSquare and no piece on destinationSquare.
@@ -497,6 +505,7 @@ void Position::undoMove(const Move m) {
 	if (move::isPromotion(m)) {
 		// Trick:: Remove the promotion piece, add a pawn instead and then we will move the pawn afterwards.
 		PieceType promotionPiece = move::getPromotionPiece(m);
+		movedPiece = PAWN;
 
 		removePiece(destinationSquare, promotionPiece, playerWhoMoved);
 		addPiece(destinationSquare, PAWN, playerWhoMoved);

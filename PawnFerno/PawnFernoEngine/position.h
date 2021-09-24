@@ -21,6 +21,8 @@ private:
 	Color player;
 	State* state;
 
+    char findPieceSquaresIndex(const Piece piece, const Square sq);
+
 	/// <summary>
 	/// Moves the given piece from the origin to destination. Does not perform any assertions!.
 	/// Also, does not perform any captures.
@@ -50,6 +52,8 @@ private:
 	std::vector<Move> getLegalCastlings() const;
 
 public:
+	Square pieceSquares[12][16];
+	char pieceCounts[12];  // char just so it is only one byte.
 	Position(State*);
 	Position(std::string fen, State*);
 	Position(Position&) = delete;  // We do not want a copy constructor for now. Best to disable it.

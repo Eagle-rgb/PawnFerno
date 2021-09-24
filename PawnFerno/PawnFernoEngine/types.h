@@ -43,6 +43,12 @@ enum PieceType {
 	PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING, PIECENONE = 7
 };
 
+enum Piece {
+	W_PAWN = 0, W_KNIGHT = 1, W_BISHOP = 2, W_ROOK = 3, W_QUEEN = 4, W_KING = 5,
+	B_PAWN = 6, B_KNIGHT = 7, B_BISHOP = 8, B_ROOK = 9, B_QUEEN = 10, B_KING = 11,
+	WB_PIECENONE = 12
+};
+
 enum Direction {
 	NORTH = 8,
 	EAST = 1,
@@ -160,6 +166,18 @@ constexpr char toChar(const PieceType pt, const Color who) {
 	return pt == PIECENONE ? ' ' : 32 * (int)who + PIECE_CHARS[pt] - 32;
 }
 
+constexpr Piece makeColoredPiece(const PieceType pt, const Color who) {
+	return Piece(pt + 6 * who);
+}
+
+constexpr PieceType toPieceType(Piece piece) {
+	return piece < 6 ? PieceType(piece) : PieceType(piece - 6);
+}
+
+constexpr bool isOfColor(Piece piece, Color who) {
+	return (piece < 6) ^ who;
+}
+
 /// <summary>
 /// Returns a character representation for a given rank (RANK1 -> 1)
 /// </summary>
@@ -182,8 +200,8 @@ constexpr Castling toCastlingValue(const char c) {
 	{
 	case 'K': return Castling::K;
 	case 'k': return Castling::k;
-	case 'Q': return Castling::q;
-	case 'q': return Castling::Q;
+	case 'Q': return Castling::Q;
+	case 'q': return Castling::q;
 	default: return Castling::None;
 	}
 }
@@ -218,6 +236,7 @@ ENABLE_ADD_OPERATORS_ON(Square)
 ENABLE_ADD_OPERATORS_ON(Castling)
 
 ENABLE_INCR_OPERATORS_ON(PieceType)
+ENABLE_INCR_OPERATORS_ON(Piece)
 ENABLE_INCR_OPERATORS_ON(Square)
 ENABLE_INCR_OPERATORS_ON(File)
 ENABLE_INCR_OPERATORS_ON(Rank)

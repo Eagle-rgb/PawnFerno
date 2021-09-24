@@ -228,7 +228,7 @@ BitBoard attacksOf(Square from, BitBoard blockers, Color c, PieceType piece);
 /// <param name="ourPieces">: Our attacking pieces. </param>
 /// <param name="blockers">: All blocking pieces. </param>
 /// <param name="c">: The attacking player. </param>
-BitBoard attacksOfAll(BitBoard ourPieces[6], BitBoard blockers, Color c);
+BitBoard attacksOfAll(const Square pieceSquares[12][16], BitBoard blockers, Color c);
 
 /*#define ENABLE_BITBOARD_OPERATORS_ON(T) \
 constexpr BitBoard operator&(BitBoard b, T d) { return BitBoard(toBB(d) & b); }	\

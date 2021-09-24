@@ -39,12 +39,10 @@ Position::Position(std::string fen, State* state) {
 
 			if (c == ' ') continue;
 
-			BitBoard current = toBB(sq);
-			if (misc::isUpper(c)) BB_wb[(int)WHITE] |= current;
-			else BB_wb[(int)BLACK] |= current;
-
+			Color who = misc::isUpper(c) ? WHITE : BLACK;
 			PieceType pt = toPieceType(c);
-			BB_pieces[pt] |= current;
+
+			addPiece(sq, pt, who);
 		}
 	}
 
@@ -72,6 +70,14 @@ void Position::clear() {
 
 	for (PieceType i = PAWN; i <= KING; ++i) {
 		BB_pieces[i] = BB_EMPTY;
+
+		for (int j = 0; j < 16; j++) {
+			pieceSquares[i][j] = SQNONE;
+			pieceSquares[i + 6][j] = SQNONE;
+		}
+
+		pieceCounts[i] = 0;
+		pieceCounts[i + 6] = 0;
 	}
 
 	player = WHITE;
@@ -137,21 +143,14 @@ BitBoard Position::getAttacksOf(const Color who, bool excludeKing) const {
 		piecesOf[p] = BB_pieces[p] & BB_wb[who];
 	}
 
-	return attacksOfAll(piecesOf, blockers, who);
+	return attacksOfAll(pieceSquares, blockers, who);
 }
 
 BitBoard Position::getEnemyAttacks() {
-	BitBoard enemyPieces[6];
-	BitBoard blockers = BB_wb[0] | BB_wb[1];
-
-	blockers &= ~(BB_wb[player] & BB_pieces[KING]);
-
-	for (PieceType p = PAWN; p <= KING; ++p) {
-		enemyPieces[p] = BB_pieces[p] & BB_wb[!player];
-	}
+	BitBoard attacks = getAttacksOf(!player, true);
 
 	state->moveGenCheck |= generatedEnemyAttacks;
-	return (state->enemyAttacks = attacksOfAll(enemyPieces, blockers, !player));
+	return (state->enemyAttacks = attacks);
 }
 
 void Position::makePinnersAndCheckers() {
@@ -163,10 +162,12 @@ void Position::makePinnersAndCheckers() {
 	// Remember that only sliders can pin.
 
 	for (PieceType p = BISHOP; p <= QUEEN; ++p) {
-		BitBoard sliders = BB_wb[!player] & BB_pieces[p];
-		Square sq = SQNONE;
+		Piece piece = makeColoredPiece(p, !player);
+		int i = 0;
 
-		while ((sq = bits::popLSB(sliders)) != SQNONE) {
+		for (int i = 0; pieceSquares[piece][i] != SQNONE; ++i) {
+			Square sq = pieceSquares[piece][i];
+
 			Direction toKing = relativeDirection(sq, kingSquare);
 
 			// Abort if this piece can not attack in that direction.
@@ -219,13 +220,14 @@ void Position::makePinnersAndCheckers() {
 }
 
 std::vector<Move> Position::getLegalPawnMoves(const BitBoard& checkRay) {
-	BitBoard pawnBB = playerPieceBBof(PAWN);
+	const Piece pawnPiece = makeColoredPiece(PAWN, player);
+
 	BitBoard blockers = blockerBB();
-	Square sq = SQNONE;
 	std::vector<Move> moves;
 
-	// Pawn moves
-	while ((sq = bits::popLSB(pawnBB)) != SQNONE) {
+	for (int i = 0; pieceSquares[pawnPiece][i] != SQNONE; ++i) {
+		Square sq = pieceSquares[pawnPiece][i];
+
 		BitBoard moveBB = PAWN_CAPTURES[player][sq] & BB_wb[!player];
 		BitBoard enPassantMoveBB = BB_EMPTY;
 
@@ -262,13 +264,15 @@ std::vector<Move> Position::getLegalPawnMoves(const BitBoard& checkRay) {
 
 std::vector<Move> Position::getLegalSliderMoves(const BitBoard& checkRay) const {
 	BitBoard blockers = blockerBB();
-	Square sq;
 
 	std::vector<Move> moves;
 
 	for (PieceType p = KNIGHT; p <= QUEEN; ++p) {
-		BitBoard pieceBB = playerPieceBBof(p);
-		while ((sq = bits::popLSB(pieceBB)) != SQNONE) {
+		Piece piece = makeColoredPiece(p, player);
+
+		for (int i = 0; pieceSquares[piece][i] != SQNONE; ++i) {
+			Square sq = pieceSquares[piece][i];
+
 			BitBoard moveBB = attacksOf(sq, blockers, player, p);
 
 			// First mask. We can not capture our own pieces.
@@ -296,7 +300,7 @@ std::vector<Move> Position::getLegalCastlings() const {
 
 	// We do not care if the squares b1 or b8 are under attack. We can castle nontheless.
 	// In general, this means we can disregard the B File.
-	BitBoard enemyAttacks = state->enemyAttacks &~ BB_FILEB;
+	BitBoard enemyAttacks = state->enemyAttacks & (~BB_FILEB);
 	BitBoard blockers = enemyAttacks | blockerBB();
 
 	short kingSideCastling = (short)Castling::K << ((short)player * 2);
@@ -375,21 +379,47 @@ bool Position::tryMove(const Move& m) {
 	return true;
 }
 
-void Position::movePiece(const Square origin, const Square destination, const PieceType piece, const Color who) {
+char Position::findPieceSquaresIndex(const Piece piece, const Square sq) {
+	int i = 0;
+
+	while (i < 16 && pieceSquares[piece][i] != sq) ++i;
+
+	assert(i < 16);
+	return i;
+}
+
+void Position::movePiece(const Square origin, const Square destination, const PieceType pt, const Color who) {
 	BitBoard orDesBB = toBB(origin) | toBB(destination);
+	Piece piece = makeColoredPiece(pt, who);
 
 	BB_wb[who] ^= orDesBB;
-	BB_pieces[piece] ^= orDesBB;
+	BB_pieces[pt] ^= orDesBB;
+
+	pieceSquares[piece][findPieceSquaresIndex(piece, origin)] = destination;
 }
 
-void Position::removePiece(const Square sq, const PieceType piece, const Color who) {
+void Position::removePiece(const Square sq, const PieceType pt, const Color who) {
+	Piece piece = makeColoredPiece(pt, who);
+
 	BB_wb[who] ^= toBB(sq);
-	BB_pieces[piece] ^= toBB(sq);
+	BB_pieces[pt] ^= toBB(sq);
+
+	char idx = findPieceSquaresIndex(piece, sq);
+
+	assert(pieceCounts[piece] > 0);
+
+	pieceSquares[piece][idx] = pieceSquares[piece][pieceCounts[piece] - 1];
+	pieceSquares[piece][pieceCounts[piece] - 1] = SQNONE;
+	--pieceCounts[piece];
 }
 
-void Position::addPiece(const Square sq, const PieceType piece, const Color who) {
+void Position::addPiece(const Square sq, const PieceType pt, const Color who) {
+	Piece piece = makeColoredPiece(pt, who);
+
 	BB_wb[who] |= toBB(sq);
-	BB_pieces[piece] |= toBB(sq);
+	BB_pieces[pt] |= toBB(sq);
+
+	pieceSquares[piece][pieceCounts[piece]++] = sq;
 }
 
 void Position::makeMove(const Move& m, State& newState) {

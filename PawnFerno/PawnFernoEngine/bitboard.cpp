@@ -137,13 +137,15 @@ BitBoard attacksOf(Square from, BitBoard blockers, Color c, PieceType piece) {
 	}
 }
 
-BitBoard attacksOfAll(BitBoard ourPieces[6], BitBoard blockers, Color c) {
+BitBoard attacksOfAll(const Square pieceSquares[12][16], BitBoard blockers, Color c) {
 	BitBoard result = BB_EMPTY;
 
 	for (PieceType p = PAWN; p <= KING; ++p) {
-		Square sq = SQNONE;
+		Piece piece = makeColoredPiece(p, c);
 
-		while ((sq = bits::popLSB(ourPieces[p])) != SQNONE) {
+		for (int i = 0; pieceSquares[piece][i] != SQNONE; ++i) {
+			Square sq = pieceSquares[piece][i];
+
 			result |= attacksOf(sq, blockers, c, p);
 		}
 	}

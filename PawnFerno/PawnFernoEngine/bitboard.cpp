@@ -7,6 +7,10 @@ BitBoard KING_ATTACKS[64];
 
 BitBoard RAYS[64][8];
 
+int SQUARE_DISTANCES[64][64];
+Direction RELATIVE_DIRECTION[64][64];
+BitBoard BB_LINES[64][64];
+
 namespace bits {
 	int ms1bTable[255];
 }
@@ -62,6 +66,18 @@ void BitBoardInit() {
 		KNIGHT_ATTACKS[sq] |= (~(BB_RANK8 | BB_FILEG | BB_FILEH) & squareBB) << 10;
 		KNIGHT_ATTACKS[sq] |= (~(BB_RANK1 | BB_FILEG | BB_FILEH) & squareBB) >> 6;
 		KNIGHT_ATTACKS[sq] |= (~(BB_RANK1 | BB_RANK2 | BB_FILEH) & squareBB) >> 15;
+
+		// Distances and directions.
+		for (Square sq2 = SQa1; sq2 <= SQh8; ++sq2) {
+			SQUARE_DISTANCES[sq][sq2] = std::max(distance<Rank>(sq, sq2), distance<Rank>(sq, sq2));
+
+			int x = toFile(sq2) > toFile(sq) ? 1 : (toFile(sq2) < toFile(sq) ? -1 : 0);
+			int y = toRank(sq2) > toRank(sq) ? 1 : (toRank(sq2) < toRank(sq) ? -1 : 0);
+			RELATIVE_DIRECTION[sq][sq2] = Direction(x + y);
+
+			Direction relDir = RELATIVE_DIRECTION[sq][sq2];
+			BB_LINES[sq][sq2] = RAYS[sq][directionIndex(relDir)] & RAYS[sq2][directionIndex(-relDir)];
+		}
 	}
 
 	// Calculate the rays.

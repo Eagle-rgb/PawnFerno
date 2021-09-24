@@ -56,6 +56,15 @@ constexpr Rank PAWN_DOUBLE_GO_FORWARD_ON_THE_CHESSBOARD_NON_EN_PASSANT_FOR_WHITE
 constexpr Rank PROMOTION_RANKS[2] = { RANK8, RANK1 };
 constexpr Rank ENPASSANT_RANKS[2] = { RANK5, RANK4 };
 
+// Precalculated distances from a Square a to a Square b.
+extern int SQUARE_DISTANCES[64][64];
+
+// Precalculated directions.
+extern Direction RELATIVE_DIRECTION[64][64];
+
+// Precalculated line bitboards
+extern BitBoard BB_LINES[64][64];
+
 // Precalculated attack masks for pawns, knights and kings.
 extern BitBoard PAWN_PUSHES[2][64];
 extern BitBoard PAWN_CAPTURES[2][64];
@@ -151,12 +160,6 @@ inline bool canPromote(Color who, Square pawnSquare) {
 	return !isFree(BB_RANK2 << (8 * 5 * (short)!who), pawnSquare);
 }
 
-// Draws a line from a to b excluding both endpoints.
-constexpr BitBoard drawLine(Square a, Square b) {
-	Direction relDir = relativeDirection(a, b);
-	return RAYS[a][directionIndex(relDir)] & RAYS[b][directionIndex(-relDir)];
-}
-
 /// <summary>
 /// Returns the Square where the pawn, which gets en-passane'd, stands, if the attacking pawn ends up on enPassantTo.
 /// </summary>
@@ -214,6 +217,20 @@ constexpr BitBoard shiftBy(BitBoard b, Direction d, int amount) {
 
 constexpr BitBoard shift(Square sq, Direction d) { return shift(toBB(sq), d); }
 constexpr BitBoard shiftBy(Square sq, Direction d, int amount) { return shiftBy(toBB(sq), d, amount); }
+
+// Returns the distance from Square a to Square b in terms of ranks, files, or squares.
+template <typename T = Square> inline int distance(Square a, Square b);
+template <> inline int distance<Rank>(Square a, Square b) { return std::abs(toRank(a) - toRank(b)); }
+template <> inline int distance<File>(Square a, Square b) { return std::abs(toFile(a) - toFile(b)); }
+template <> inline int distance<Square>(Square a, Square b) { return SQUARE_DISTANCES[a][b]; }
+
+// Returns the relative direction from Square a to Square b.
+inline Direction relativeDirection(Square a, Square b) { return RELATIVE_DIRECTION[a][b]; }
+
+// Draws a line from a to b excluding both endpoints.
+inline BitBoard drawLine(Square a, Square b) {
+	return BB_LINES[a][b];
+}
 
 void BitBoardInit();
 BitBoard pseudoLegalBishop(Square, BitBoard blockers);

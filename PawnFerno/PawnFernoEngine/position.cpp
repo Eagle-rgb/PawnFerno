@@ -447,7 +447,7 @@ void Position::makeMove(const Move& m, State& newState) {
 		}
 
 		// Check if it was a double push -> update enPassant state.
-		if (squareDistance(originSquare, destinationSquare) >= 2) {
+		if (distance(originSquare, destinationSquare) >= 2) {
 			state->enPassant = enPassantToSquare(destinationSquare, player);
 		}
 

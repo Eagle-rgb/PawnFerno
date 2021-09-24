@@ -99,32 +99,6 @@ constexpr File toFile(const Square sq) {
 }
 
 /// <summary>
-/// Returns the relative direction of square b to origin a.
-/// </summary>
-constexpr Direction relativeDirection(const Square a, const Square b) {
-	int x = toFile(b) - toFile(a) > 0 ? 1 : (toFile(b) - toFile(a) < 0 ? -1 : 0);
-	int y = toRank(b) - toRank(a) > 0 ? 8 : (toRank(b) - toRank(a) < 0 ? -8 : 0);
-	return Direction(x + y);
-}
-
-/// <summary>
-/// Returns the shortest path distance from 'a' to 'b', but without using diagonals.
-/// </summary>
-inline int squareDistanceNonDiag(const Square a, const Square b) {
-	return abs(toFile(b) - toFile(a)) + abs(toRank(b) - toRank(a));
-}
-
-
-/// <summary>
-/// Returns the shortest path distance from 'a' to 'b', also considering diagonals.
-/// </summary>
-inline int squareDistance(const Square a, const Square b) {
-	int fileDistance = abs(toFile(b) - toFile(a));
-	int rankDistance = abs(toRank(b) - toRank(a));
-	return fileDistance > rankDistance ? fileDistance : rankDistance;
-}
-
-/// <summary>
 /// Gives the index starting from east going clockwise of the given direction.
 /// </summary>
 constexpr int directionIndex(const Direction d) {

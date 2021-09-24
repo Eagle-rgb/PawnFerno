@@ -77,15 +77,37 @@ void Position::clear() {
 	player = WHITE;
 }
 
-Color Position::playerToMove() {
+Color Position::playerToMove() const {
 	return player;
 }
 
-PieceType Position::getPieceOn(Square sq) {
+bool Position::isCaptures(const Move& m) const {
+	BitBoard enemies = BB_wb[!player];
+	BitBoard destination = BitBoard(move::destinationSquare(m));
+
+	return (!isEmpty(enemies & destination));
+}
+
+bool Position::inCheck() const {
+	assert((state->moveGenCheck & generatedEnemyAttacks) != 0);
+	return !isEmpty(BB_wb[player] & BB_pieces[KING] & state->enemyAttacks);
+}
+
+bool Position::inDoubleCheck() const {
+	assert((state->moveGenCheck & generatedEnemyAttacks) != 0);
+	return more_than_one(BB_wb[player] & BB_pieces[KING] & state->enemyAttacks);
+}
+
+bool Position::isPinned(const Square& sq) const {
+	assert((state->moveGenCheck & generatedPinnedPieces) != 0);
+	return !isFree(state->pinnedPieces, sq);
+}
+
+PieceType Position::getPieceOn(const Square& sq) const {
 	return getPieceOn(sq, player);
 }
 
-PieceType Position::getPieceOn(Square sq, Color who) {
+PieceType Position::getPieceOn(const Square& sq, const Color& who) const {
 	BitBoard currentPlayerBB = BB_wb[who];
 
 	for (PieceType i = PAWN; i <= KING; ++i)
@@ -94,7 +116,7 @@ PieceType Position::getPieceOn(Square sq, Color who) {
 	return PIECENONE;
 }
 
-PieceType Position::getPieceOnAny(Square sq, Color& c) {
+PieceType Position::getPieceOnAny(const Square& sq, Color& c) const {
 	for (PieceType i = PAWN; i <= KING; ++i) {
 		if (!isFree(BB_pieces[i], sq)) {
 			c = !isFree(BB_wb[WHITE], sq) ? WHITE : BLACK;
@@ -105,7 +127,7 @@ PieceType Position::getPieceOnAny(Square sq, Color& c) {
 	return PIECENONE;
 }
 
-BitBoard Position::getAttacksOf(Color who, bool excludeKing) {
+BitBoard Position::getAttacksOf(const Color& who, bool excludeKing) const {
 	BitBoard piecesOf[6];
 	BitBoard blockers = BB_wb[0] | BB_wb[1];
 
@@ -196,7 +218,7 @@ void Position::makePinnersAndCheckers() {
 	state->moveGenCheck |= generatedCheckingPieces | generatedPinnedPieces;
 }
 
-std::vector<Move> Position::getLegalPawnMoves(BitBoard checkRay) {
+std::vector<Move> Position::getLegalPawnMoves(const BitBoard& checkRay) const {
 	BitBoard pawnBB = playerPieceBBof(PAWN);
 	BitBoard blockers = blockerBB();
 	Square sq = SQNONE;
@@ -238,7 +260,7 @@ std::vector<Move> Position::getLegalPawnMoves(BitBoard checkRay) {
 	return moves;
 }
 
-std::vector<Move> Position::getLegalSliderMoves(BitBoard checkRay) {
+std::vector<Move> Position::getLegalSliderMoves(const BitBoard& checkRay) const {
 	BitBoard blockers = blockerBB();
 	Square sq;
 
@@ -268,7 +290,7 @@ std::vector<Move> Position::getLegalSliderMoves(BitBoard checkRay) {
 	return moves;
 }
 
-std::vector<Move> Position::getLegalCastlings() {
+std::vector<Move> Position::getLegalCastlings() const {
 	std::vector<Move> moves;
 	short castlingRights = state->castlingRights;
 
@@ -338,22 +360,7 @@ std::vector<Move> Position::getLegalMovesAuto() {
 	return getLegalMoves();
 }
 
-bool Position::inCheck() {
-	assert((state->moveGenCheck & generatedEnemyAttacks) != 0);
-	return !isEmpty(BB_wb[player] & BB_pieces[KING] & state->enemyAttacks);
-}
-
-bool Position::inDoubleCheck() {
-	assert((state->moveGenCheck & generatedEnemyAttacks) != 0);
-	return more_than_one(BB_wb[player] & BB_pieces[KING] & state->enemyAttacks);
-}
-
-bool Position::isPinned(Square sq) {
-	assert((state->moveGenCheck & generatedPinnedPieces) != 0);
-	return !isFree(state->pinnedPieces, sq);
-}
-
-bool Position::tryMove(Move m) {
+bool Position::tryMove(const Move& m) {
 	State temp = State();
 
 	makeMove(m, temp);
@@ -368,31 +375,24 @@ bool Position::tryMove(Move m) {
 	return true;
 }
 
-bool Position::isCaptures(Move m) {
-	BitBoard enemies = BB_wb[!player];
-	BitBoard destination = BitBoard(move::destinationSquare(m));
-
-	return (!isEmpty(enemies & destination));
-}
-
-void Position::movePiece(Square origin, Square destination, PieceType piece, Color who) {
+void Position::movePiece(const Square& origin, const Square& destination, const PieceType& piece, const Color& who) {
 	BitBoard orDesBB = toBB(origin) | toBB(destination);
 
 	BB_wb[who] ^= orDesBB;
 	BB_pieces[piece] ^= orDesBB;
 }
 
-void Position::removePiece(Square sq, PieceType piece, Color who) {
+void Position::removePiece(const Square& sq, const PieceType& piece, const Color& who) {
 	BB_wb[who] ^= toBB(sq);
 	BB_pieces[piece] ^= toBB(sq);
 }
 
-void Position::addPiece(Square sq, PieceType piece, Color who) {
+void Position::addPiece(const Square& sq, const PieceType& piece, const Color& who) {
 	BB_wb[who] |= toBB(sq);
 	BB_pieces[piece] |= toBB(sq);
 }
 
-void Position::makeMove(const Move m, State& newState) {
+void Position::makeMove(const Move& m, State& newState) {
 	Square originSquare = move::originSquare(m);
 	Square destinationSquare = move::destinationSquare(m);
 	PieceType movedPiece = getPieceOn(originSquare);
@@ -405,12 +405,14 @@ void Position::makeMove(const Move m, State& newState) {
 	state->enPassant = SQNONE;
 	state->moveGenCheck = 0;
 
+	// Perform captures.
 	if (capturedPiece != PIECENONE) {
 		removePiece(destinationSquare, capturedPiece, !player);
 	}
 
 	if (movedPiece == PAWN) {
 		if (move::isEnPassant(m)) {
+			// Remove the pawn that got enpassant captured.
 			removePiece(enPassantPawnSquare(destinationSquare, player), PAWN, !player);
 		}
 
@@ -423,12 +425,12 @@ void Position::makeMove(const Move m, State& newState) {
 		if (move::isPromotion(m)) {
 			PieceType promotionPiece = move::getPromotionPiece(m);
 
+			// We add the promotion piece and remove the pawn. Careful: Later we will not perform the
+			// movePiece operation on the pawn, since it no longer exists.
 			addPiece(destinationSquare, promotionPiece, player);
 			removePiece(originSquare, PAWN, player);
 		}
 	}
-
-	// Check if it was a double push -> update enPassant state.
 
 	// If king move, then remove castling rights.
 	if (movedPiece == KING) {
@@ -476,7 +478,7 @@ void Position::makeMove(const Move m, State& newState) {
 	player = !player;
 }
 
-void Position::undoMove(const Move m) {
+void Position::undoMove(const Move& m) {
 	assert(state->previousState != nullptr);
 
 	Square destinationSquare = move::destinationSquare(m);
@@ -523,7 +525,7 @@ void Position::undoMove(const Move m) {
 	player = playerWhoMoved;
 }
 
-std::string Position::charBB() {
+std::string Position::charBB() const {
 	std::string result = "";
 
 	for (Rank i = RANK8; i >= RANK1; --i) {
@@ -539,6 +541,6 @@ std::string Position::charBB() {
 	return result;
 }
 
-std::string Position::print() {
+std::string Position::print() const {
 	return printing::printBoard(charBB());
 }

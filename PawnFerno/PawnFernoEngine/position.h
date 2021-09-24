@@ -25,79 +25,102 @@ private:
 	/// Moves the given piece from the origin to destination. Does not perform any assertions!.
 	/// Also, does not perform any captures.
 	/// </summary>
-	void movePiece(Square origin, Square destination, PieceType, Color);
+	void movePiece(const Square& origin, const Square& destination, const PieceType&, const Color&);
 
 	/// <summary>
 	/// Removes ("Captures") the piece.
 	/// </summary>
-	void removePiece(Square, PieceType, Color);
+	void removePiece(const Square&, const PieceType&, const Color&);
 
 	/// <summary>
 	/// Adds the given piece to the board.
 	/// </summary>
-	void addPiece(Square, PieceType, Color);
+	void addPiece(const Square&, const PieceType&, const Color&);
 
 	/// <summary>
 	/// Calculates and returns all legal pawn moves.
 	/// </summary>
-	std::vector<Move> getLegalPawnMoves(BitBoard checkRay);
+	std::vector<Move> getLegalPawnMoves(const BitBoard& checkRay) const;
 
 	/// <summary>
 	/// Calculates and returns all legal slider moves.
 	/// </summary>
-	std::vector<Move> getLegalSliderMoves(BitBoard checkRay);
+	std::vector<Move> getLegalSliderMoves(const BitBoard& checkRay) const;
 
-	std::vector<Move> getLegalCastlings();
+	std::vector<Move> getLegalCastlings() const;
 
 public:
 	Position(State*);
 	Position(std::string fen, State*);
+	Position(Position&) = delete;  // We do not want a copy constructor for now. Best to disable it.
 
 	/// <summary>
 	/// Clears the current position and sets all values to default values.
 	/// </summary>
 	void clear();
 
-	Color playerToMove();
+	Color playerToMove() const;
 
 	/// <summary>
 	/// Returns the piece standing on the given square for the current player.
 	/// </summary>
-	PieceType getPieceOn(Square);
+	PieceType getPieceOn(const Square&) const;
 
 	/// <summary>
 	/// Returns the piece standing on the given square for the given player.
 	/// </summary>
-	PieceType getPieceOn(Square, Color);
+	PieceType getPieceOn(const Square&, const Color&) const;
 
 	/// <summary>
 	/// Returns the piece standing on the given square, for any player.
 	/// Also gives the player owning that piece as a reference parameter.
 	/// Gives black as color if the square is empty.
 	/// </summary>
-	PieceType getPieceOnAny(Square, Color&);
+	PieceType getPieceOnAny(const Square&, Color&) const;
 
 	/// <summary>
 	/// Returns the blocker bitboard.
 	/// </summary>
-	inline BitBoard blockerBB() { return BB_wb[WHITE] | BB_wb[BLACK]; }
+	inline BitBoard blockerBB() const { return BB_wb[WHITE] | BB_wb[BLACK]; }
 
 	/// <summary>
 	/// Returns the piece BitBoard of the given piece for the current player.
 	/// </summary>
-	inline BitBoard playerPieceBBof(PieceType p) { return BB_wb[player] & BB_pieces[p]; }
+	inline BitBoard playerPieceBBof(PieceType& p) const { return BB_wb[player] & BB_pieces[p]; }
 
 	/// <summary>
 	/// Returns the square of the king for the current player.
 	/// </summary>
-	inline Square kingSquare() { return toSquare(playerPieceBBof(KING)); }
+	inline Square kingSquare() const { return toSquare(playerPieceBBof(KING)); }
+
+	/// <summary>
+	/// Determines whether a given move performs a capture.
+	/// </summary>
+	bool isCaptures(const Move&) const;
+
+	/// <summary>
+	/// Returns true if the current player is in check.
+	/// PREREQUISITE: 0b1
+	/// </summary>
+	bool inCheck() const;
+
+	/// <summary>
+	/// Returns true if the current player is in double check.
+	/// </summary>
+	bool inDoubleCheck() const;
+
+	/// <summary>
+	/// Returns true if the piece on the given square is pinned.
+	/// PREREQUISITE: 0b100
+	/// </summary>
+	bool isPinned(const Square&) const;
 
 	/// <summary>
 	/// Calculates all squares being attacked by the given player and return them.
 	/// Optionally, one may exclude the enemies king from the board.
 	/// </summary>
 	/// <returns> BitBoard containing the attacked squares. </returns>
-	BitBoard getAttacksOf(Color who, bool excludeKing = false);
+	BitBoard getAttacksOf(Color& who, bool excludeKing = false) const;
 
 	/// <summary>
 	/// Calculates all squares being attacked by the enemy and returns them.
@@ -123,51 +146,29 @@ public:
 	std::vector<Move> getLegalMovesAuto();
 
 	/// <summary>
-	/// Returns true if the current player is in check.
-	/// PREREQUISITE: 0b1
-	/// </summary>
-	bool inCheck();
-
-	/// <summary>
-	/// Returns true if the current player is in double check.
-	/// </summary>
-	bool inDoubleCheck();
-
-	/// <summary>
-	/// Returns true if the piece on the given square is pinned.
-	/// PREREQUISITE: 0b100
-	/// </summary>
-	bool isPinned(Square);
-
-	/// <summary>
 	/// Tries the given move and return true if the resulting position remains legal.
 	/// </summary>
-	bool tryMove(Move);
-
-	/// <summary>
-	/// Determines whether a given move performs a capture.
-	/// </summary>
-	bool isCaptures(Move);
+	bool tryMove(const Move&);
 
 	/// <summary>
 	/// Makes the given move on the board.
 	/// </summary>
-	void makeMove(const Move, State& newState);
+	void makeMove(const Move&, State& newState);
 
 	/// <summary>
 	/// Undo's the given move.
 	/// </summary>
-	void undoMove(const Move);
+	void undoMove(const Move&);
 
 	/// <summary>
 	/// Returns a character-string like in FEN but without the '/' and with spaces for no pieces.
 	/// </summary>
-	std::string charBB();
+	std::string charBB() const;
 
 	/// <summary>
 	/// Returns a printable string of the given position.
 	/// </summary>
-	std::string print();
+	std::string print() const;
 };
 
 #endif

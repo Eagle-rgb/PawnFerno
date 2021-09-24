@@ -79,23 +79,23 @@ enum class SCastling {
 /// <summary>
 /// Constructs the square residing on file f and rank r.
 /// </summary>
-constexpr Square toSquare(const File& f, const Rank& r) {
+constexpr Square toSquare(const File f, const Rank r) {
 	return Square((8 * r) + f);
 }
 
 // Get Rank, File from Square
-constexpr Rank toRank(const Square& sq) {
+constexpr Rank toRank(const Square sq) {
 	return Rank(sq / 8);
 }
 
-constexpr File toFile(const Square& sq) {
+constexpr File toFile(const Square sq) {
 	return File(int(sq) & 7);
 }
 
 /// <summary>
 /// Returns the relative direction of square b to origin a.
 /// </summary>
-constexpr Direction relativeDirection(const Square& a, const Square& b) {
+constexpr Direction relativeDirection(const Square a, const Square b) {
 	int x = toFile(b) - toFile(a) > 0 ? 1 : (toFile(b) - toFile(a) < 0 ? -1 : 0);
 	int y = toRank(b) - toRank(a) > 0 ? 8 : (toRank(b) - toRank(a) < 0 ? -8 : 0);
 	return Direction(x + y);
@@ -104,7 +104,7 @@ constexpr Direction relativeDirection(const Square& a, const Square& b) {
 /// <summary>
 /// Returns the shortest path distance from 'a' to 'b', but without using diagonals.
 /// </summary>
-inline int squareDistanceNonDiag(const Square& a, const Square& b) {
+inline int squareDistanceNonDiag(const Square a, const Square b) {
 	return abs(toFile(b) - toFile(a)) + abs(toRank(b) - toRank(a));
 }
 
@@ -112,7 +112,7 @@ inline int squareDistanceNonDiag(const Square& a, const Square& b) {
 /// <summary>
 /// Returns the shortest path distance from 'a' to 'b', also considering diagonals.
 /// </summary>
-inline int squareDistance(const Square& a, const Square& b) {
+inline int squareDistance(const Square a, const Square b) {
 	int fileDistance = abs(toFile(b) - toFile(a));
 	int rankDistance = abs(toRank(b) - toRank(a));
 	return fileDistance > rankDistance ? fileDistance : rankDistance;
@@ -121,7 +121,7 @@ inline int squareDistance(const Square& a, const Square& b) {
 /// <summary>
 /// Gives the index starting from east going clockwise of the given direction.
 /// </summary>
-constexpr int directionIndex(const Direction& d) {
+constexpr int directionIndex(const Direction d) {
 	return DIRECTION_INDEXES[d + 9];
 }
 
@@ -156,28 +156,28 @@ constexpr PieceType toPieceType(char pt) {
 /// Returns the appropriate piece character for the given piece.
 /// This also considers the player to move, so if black move, the character will be uppercase.
 /// </summary>
-constexpr char toChar(const PieceType& pt, const Color& who) {
+constexpr char toChar(const PieceType pt, const Color who) {
 	return pt == PIECENONE ? ' ' : 32 * (int)who + PIECE_CHARS[pt] - 32;
 }
 
 /// <summary>
 /// Returns a character representation for a given rank (RANK1 -> 1)
 /// </summary>
-constexpr char rankChar(const Rank& r) {
+constexpr char rankChar(const Rank r) {
 	return RANK_CHARS[(int)r];
 }
 
 /// <summary>
 /// Returns a character representation for a given file (FILEA -> a)
 /// </summary>
-constexpr char fileChar(const File& f) {
+constexpr char fileChar(const File f) {
 	return FILE_CHARS[(int)f];
 }
 
 /// <summary>
 /// Basically casts the character to Castling enum. Returns None as default.
 /// </summary>
-constexpr Castling toCastlingValue(const char& c) {
+constexpr Castling toCastlingValue(const char c) {
 	switch (c)
 	{
 	case 'K': return Castling::K;
@@ -191,7 +191,7 @@ constexpr Castling toCastlingValue(const char& c) {
 /// <summary>
 /// Maps any type of castling to an appropriate index for lookups in castling arrays (defined in bitboard.h)
 /// <summary>
-constexpr int castlingIndex(const Color& who, const SCastling& c) {
+constexpr int castlingIndex(const Color who, const SCastling c) {
 	return ((short)c + 2 * (short)who) - 1;
 }
 

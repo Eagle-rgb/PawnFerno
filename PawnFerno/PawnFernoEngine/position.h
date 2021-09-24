@@ -25,22 +25,22 @@ private:
 	/// Moves the given piece from the origin to destination. Does not perform any assertions!.
 	/// Also, does not perform any captures.
 	/// </summary>
-	void movePiece(const Square& origin, const Square& destination, const PieceType&, const Color&);
+	void movePiece(const Square origin, const Square destination, const PieceType, const Color);
 
 	/// <summary>
 	/// Removes ("Captures") the piece.
 	/// </summary>
-	void removePiece(const Square&, const PieceType&, const Color&);
+	void removePiece(const Square, const PieceType, const Color);
 
 	/// <summary>
 	/// Adds the given piece to the board.
 	/// </summary>
-	void addPiece(const Square&, const PieceType&, const Color&);
+	void addPiece(const Square, const PieceType, const Color);
 
 	/// <summary>
 	/// Calculates and returns all legal pawn moves.
 	/// </summary>
-	std::vector<Move> getLegalPawnMoves(const BitBoard& checkRay) const;
+	std::vector<Move> getLegalPawnMoves(const BitBoard& checkRay);  // Non const - as it tries for enPassant.
 
 	/// <summary>
 	/// Calculates and returns all legal slider moves.
@@ -64,19 +64,19 @@ public:
 	/// <summary>
 	/// Returns the piece standing on the given square for the current player.
 	/// </summary>
-	PieceType getPieceOn(const Square&) const;
+	PieceType getPieceOn(const Square) const;
 
 	/// <summary>
 	/// Returns the piece standing on the given square for the given player.
 	/// </summary>
-	PieceType getPieceOn(const Square&, const Color&) const;
+	PieceType getPieceOn(const Square, const Color) const;
 
 	/// <summary>
 	/// Returns the piece standing on the given square, for any player.
 	/// Also gives the player owning that piece as a reference parameter.
 	/// Gives black as color if the square is empty.
 	/// </summary>
-	PieceType getPieceOnAny(const Square&, Color&) const;
+	PieceType getPieceOnAny(const Square, Color&) const;
 
 	/// <summary>
 	/// Returns the blocker bitboard.
@@ -86,7 +86,7 @@ public:
 	/// <summary>
 	/// Returns the piece BitBoard of the given piece for the current player.
 	/// </summary>
-	inline BitBoard playerPieceBBof(PieceType& p) const { return BB_wb[player] & BB_pieces[p]; }
+	inline BitBoard playerPieceBBof(const PieceType p) const { return BB_wb[player] & BB_pieces[p]; }
 
 	/// <summary>
 	/// Returns the square of the king for the current player.
@@ -113,14 +113,14 @@ public:
 	/// Returns true if the piece on the given square is pinned.
 	/// PREREQUISITE: 0b100
 	/// </summary>
-	bool isPinned(const Square&) const;
+	bool isPinned(const Square) const;
 
 	/// <summary>
 	/// Calculates all squares being attacked by the given player and return them.
 	/// Optionally, one may exclude the enemies king from the board.
 	/// </summary>
 	/// <returns> BitBoard containing the attacked squares. </returns>
-	BitBoard getAttacksOf(Color& who, bool excludeKing = false) const;
+	BitBoard getAttacksOf(const Color who, bool excludeKing = false) const;
 
 	/// <summary>
 	/// Calculates all squares being attacked by the enemy and returns them.

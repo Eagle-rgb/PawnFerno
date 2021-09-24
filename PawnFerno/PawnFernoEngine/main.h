@@ -6,5 +6,6 @@
 #include "position.h"
 #include "perft.h"
 #include <iostream>
+#include <chrono>
 
 #endif

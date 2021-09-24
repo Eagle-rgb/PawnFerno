@@ -98,16 +98,16 @@ bool Position::inDoubleCheck() const {
 	return more_than_one(BB_wb[player] & BB_pieces[KING] & state->enemyAttacks);
 }
 
-bool Position::isPinned(const Square& sq) const {
+bool Position::isPinned(const Square sq) const {
 	assert((state->moveGenCheck & generatedPinnedPieces) != 0);
 	return !isFree(state->pinnedPieces, sq);
 }
 
-PieceType Position::getPieceOn(const Square& sq) const {
+PieceType Position::getPieceOn(const Square sq) const {
 	return getPieceOn(sq, player);
 }
 
-PieceType Position::getPieceOn(const Square& sq, const Color& who) const {
+PieceType Position::getPieceOn(const Square sq, const Color who) const {
 	BitBoard currentPlayerBB = BB_wb[who];
 
 	for (PieceType i = PAWN; i <= KING; ++i)
@@ -116,7 +116,7 @@ PieceType Position::getPieceOn(const Square& sq, const Color& who) const {
 	return PIECENONE;
 }
 
-PieceType Position::getPieceOnAny(const Square& sq, Color& c) const {
+PieceType Position::getPieceOnAny(const Square sq, Color& c) const {
 	for (PieceType i = PAWN; i <= KING; ++i) {
 		if (!isFree(BB_pieces[i], sq)) {
 			c = !isFree(BB_wb[WHITE], sq) ? WHITE : BLACK;
@@ -127,7 +127,7 @@ PieceType Position::getPieceOnAny(const Square& sq, Color& c) const {
 	return PIECENONE;
 }
 
-BitBoard Position::getAttacksOf(const Color& who, bool excludeKing) const {
+BitBoard Position::getAttacksOf(const Color who, bool excludeKing) const {
 	BitBoard piecesOf[6];
 	BitBoard blockers = BB_wb[0] | BB_wb[1];
 
@@ -218,7 +218,7 @@ void Position::makePinnersAndCheckers() {
 	state->moveGenCheck |= generatedCheckingPieces | generatedPinnedPieces;
 }
 
-std::vector<Move> Position::getLegalPawnMoves(const BitBoard& checkRay) const {
+std::vector<Move> Position::getLegalPawnMoves(const BitBoard& checkRay) {
 	BitBoard pawnBB = playerPieceBBof(PAWN);
 	BitBoard blockers = blockerBB();
 	Square sq = SQNONE;
@@ -375,19 +375,19 @@ bool Position::tryMove(const Move& m) {
 	return true;
 }
 
-void Position::movePiece(const Square& origin, const Square& destination, const PieceType& piece, const Color& who) {
+void Position::movePiece(const Square origin, const Square destination, const PieceType piece, const Color who) {
 	BitBoard orDesBB = toBB(origin) | toBB(destination);
 
 	BB_wb[who] ^= orDesBB;
 	BB_pieces[piece] ^= orDesBB;
 }
 
-void Position::removePiece(const Square& sq, const PieceType& piece, const Color& who) {
+void Position::removePiece(const Square sq, const PieceType piece, const Color who) {
 	BB_wb[who] ^= toBB(sq);
 	BB_pieces[piece] ^= toBB(sq);
 }
 
-void Position::addPiece(const Square& sq, const PieceType& piece, const Color& who) {
+void Position::addPiece(const Square sq, const PieceType piece, const Color who) {
 	BB_wb[who] |= toBB(sq);
 	BB_pieces[piece] |= toBB(sq);
 }

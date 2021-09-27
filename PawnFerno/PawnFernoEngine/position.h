@@ -10,6 +10,7 @@
 #include "state.h"
 #include <vector>
 #include <string>
+#include <chrono>
 
 constexpr char startPosFen[57] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -17,6 +18,8 @@ class Position {
 private:
 	BitBoard BB_wb[2];
 	BitBoard BB_pieces[6];
+	Square pieceSquares[12][16];
+	char pieceCounts[12];  // char just so it is only one byte.
 
 	Color player;
 	State* state;
@@ -52,8 +55,6 @@ private:
 	std::vector<Move> getLegalCastlings() const;
 
 public:
-	Square pieceSquares[12][16];
-	char pieceCounts[12];  // char just so it is only one byte.
 	Position(State*);
 	Position(std::string fen, State*);
 	Position(Position&) = delete;  // We do not want a copy constructor for now. Best to disable it.
@@ -160,9 +161,19 @@ public:
 	void makeMove(const Move&, State& newState);
 
 	/// <summary>
+	/// Makes the move, but forgets how to undo it (reuses its own state object).
+	/// </summary>
+	void makeMoveForgetful(const Move&);
+
+	/// <summary>
 	/// Undo's the given move.
 	/// </summary>
 	void undoMove(const Move&);
+
+	/// <summary>
+	/// This takes a pseudo move - mostlikely generated from algebraic notation - and converts it into a move fitting the current position.
+	/// </summary>
+	Move makeLegalFromPseudo(const Move);
 
 	/// <summary>
 	/// Returns a character-string like in FEN but without the '/' and with spaces for no pieces.

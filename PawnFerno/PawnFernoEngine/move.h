@@ -10,6 +10,7 @@
 
 namespace move {
 	enum SpecialMoves {
+		normal = 0,
 		enPassant = 0b1 << 12,
 		castling = 0b10 << 12,
 		promotion = 0b11 << 12

@@ -28,7 +28,13 @@ struct State {
 
 	State* previousState;
 
-	State();
+	State() { capturedPiece = PIECENONE,
+		castlingRights = 0,
+		enPassant = SQNONE,
+		moveGenCheck = 0,
+		previousState = nullptr; }
+
+	inline bool canCastleSide(SCastling c, Color who) { return (short)toCastling(c, who) & castlingRights; }
 };
 
 #endif

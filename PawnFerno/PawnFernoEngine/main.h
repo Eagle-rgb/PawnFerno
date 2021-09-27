@@ -7,5 +7,6 @@
 #include "perft.h"
 #include <iostream>
 #include <chrono>
+#include "uci.h"
 
 #endif

@@ -56,6 +56,9 @@ constexpr Rank PAWN_DOUBLE_GO_FORWARD_ON_THE_CHESSBOARD_NON_EN_PASSANT_FOR_WHITE
 constexpr Rank PROMOTION_RANKS[2] = { RANK8, RANK1 };
 constexpr Rank ENPASSANT_RANKS[2] = { RANK5, RANK4 };
 
+constexpr File FILE_LEFT[8] = { FILENONE, FILEA, FILEB, FILEC, FILED, FILEE, FILEF, FILEG };
+constexpr File FILE_RIGHT[8] = { FILEB, FILEC, FILED, FILEE, FILEF, FILEG, FILEH, FILENONE };
+
 // Precalculated distances from a Square a to a Square b.
 extern int SQUARE_DISTANCES[64][64];
 
@@ -73,6 +76,14 @@ extern BitBoard KING_ATTACKS[64];
 
 // Precalculated rays.
 extern BitBoard RAYS[64][8];
+
+extern BitBoard BB_FORWARD[2][64];
+
+// Forward Span (left, middle and right file) of the current square and for every player.
+extern BitBoard FORWARD_SPAN[2][64];
+
+// The two squares in front of the given square.
+extern BitBoard FORWARD_DOUBLE_SQUARES[2][64];
 
 namespace bits
 {
@@ -142,6 +153,9 @@ constexpr Square toSquare(BitBoard bb){
 	return Square(bits::bitScanForward(bb));
 }
 
+constexpr File file_left(File f) { return FILE_LEFT[f]; }
+constexpr File file_right(File f) { return FILE_RIGHT[f]; }
+
 constexpr bool isEmpty(BitBoard bb){
 	return !bool(bb);
 }
@@ -157,7 +171,17 @@ constexpr bool more_than_one(BitBoard bb) {
 }
 
 inline bool canPromote(Color who, Square pawnSquare) {
-	return !isFree(BB_RANK2 << (8 * 5 * (short)!who), pawnSquare);
+	return toRank(pawnSquare) == PAWN_DOUBLE_GO_FORWARD_ON_THE_CHESSBOARD_NON_EN_PASSANT_FOR_WHITE_AND_BLACK[!who];
+}
+
+inline bool canDoublePush(Color who, Square pawnSquare) { return canPromote(!who, pawnSquare); }
+
+inline BitBoard getForwardSpan(Color who, Square sq) {
+	return FORWARD_SPAN[who][sq];
+}
+
+inline BitBoard getPawnForwardFields(Color who, Square sq) {
+	return FORWARD_DOUBLE_SQUARES[who][sq];
 }
 
 /// <summary>
@@ -230,6 +254,14 @@ inline Direction relativeDirection(Square a, Square b) { return RELATIVE_DIRECTI
 // Draws a line from a to b excluding both endpoints.
 inline BitBoard drawLine(Square a, Square b) {
 	return BB_LINES[a][b];
+}
+
+inline BitBoard pawnPushes(Color who, Square sq, BitBoard blockers) {
+	BitBoard result = PAWN_PUSHES[who][sq] & ~blockers;
+	if (canDoublePush(who, sq)) 
+		result &= ~(shift(blockers ^ toBB(sq), PAWN_DIRECTIONS[who]));
+
+	return result;
 }
 
 void BitBoardInit();

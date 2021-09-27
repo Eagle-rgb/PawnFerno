@@ -221,6 +221,7 @@ void Position::makePinnersAndCheckers() {
 
 std::vector<Move> Position::getLegalPawnMoves(const BitBoard& checkRay) {
 	const Piece pawnPiece = makeColoredPiece(PAWN, player);
+	const Square kingSq = kingSquare();
 
 	BitBoard blockers = blockerBB();
 	std::vector<Move> moves;
@@ -232,10 +233,10 @@ std::vector<Move> Position::getLegalPawnMoves(const BitBoard& checkRay) {
 		BitBoard enPassantMoveBB = BB_EMPTY;
 
 		// Very compact way to determine if we can push our pawn, and if yes, then to which square.
-		moveBB |= PAWN_PUSHES[player][sq] & ~(blockers | (shift(blockers ^ toBB(sq), PAWN_DIRECTIONS[player])));
+		moveBB |= pawnPushes(player, sq, blockers);
 
 		if (isPinned(sq)) {
-			moveBB &= RAYS[kingSquare()][directionIndex(relativeDirection(kingSquare(), sq))];
+			moveBB &= RAYS[kingSq][directionIndex(relativeDirection(kingSq, sq))];
 		}
 
 		moveBB &= checkRay;
@@ -320,7 +321,6 @@ std::vector<Move> Position::getLegalMoves() {
 
 	BitBoard blockers = blockerBB();
 	Square kingSquare = toSquare(BB_wb[player] & BB_pieces[KING]);
-	Square sq = SQNONE;  // iterator square.
 
 	std::vector<Move> moves;
 
@@ -334,7 +334,6 @@ std::vector<Move> Position::getLegalMoves() {
 
 		std::vector<Move> pawnMoves = getLegalPawnMoves(checkRay);
 		std::vector<Move> sliderMoves = getLegalSliderMoves(checkRay);
-
 		moves.insert(moves.end(), pawnMoves.begin(), pawnMoves.end());
 		moves.insert(moves.end(), sliderMoves.begin(), sliderMoves.end());
 	}
@@ -361,7 +360,21 @@ std::vector<Move> Position::getLegalMoves() {
 std::vector<Move> Position::getLegalMovesAuto() {
 	getEnemyAttacks();
 	makePinnersAndCheckers();
-	return getLegalMoves();
+	getLegalMoves();
+
+	/*std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+	getEnemyAttacks();
+	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+	time_enemyAttackGeneration += std::chrono::duration_cast<TimeUnit>(end - begin);
+	begin = std::chrono::steady_clock::now();
+	makePinnersAndCheckers();
+	end = std::chrono::steady_clock::now();
+	time_pinnersGeneration += std::chrono::duration_cast<TimeUnit>(end - begin);
+	begin = std::chrono::steady_clock::now();
+	getLegalMoves();
+	end = std::chrono::steady_clock::now();
+	time_legalMoveGeneration += std::chrono::duration_cast<TimeUnit>(end - begin);*/
+	return state->legalMoves;
 }
 
 bool Position::tryMove(const Move& m) {
@@ -508,6 +521,12 @@ void Position::makeMove(const Move& m, State& newState) {
 	player = !player;
 }
 
+void Position::makeMoveForgetful(const Move& m) {
+	state->previousState = state;
+	makeMove(m, *state);
+	state->previousState = nullptr;
+}
+
 void Position::undoMove(const Move& m) {
 	assert(state->previousState != nullptr);
 
@@ -553,6 +572,19 @@ void Position::undoMove(const Move& m) {
 	state = state->previousState;
 
 	player = playerWhoMoved;
+}
+
+Move Position::makeLegalFromPseudo(const Move m) {
+	Square origin = move::originSquare(m);
+	Square destination = move::destinationSquare(m);
+
+	if (!(state->moveGenCheck & generatedLegalMoves)) getLegalMovesAuto();
+
+	for (Move mov : state->legalMoves) {
+		if (move::originSquare(mov) == origin && move::destinationSquare(mov) == destination) return mov;
+	}
+
+	return 0;
 }
 
 std::string Position::charBB() const {

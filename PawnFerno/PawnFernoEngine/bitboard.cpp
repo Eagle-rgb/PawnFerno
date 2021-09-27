@@ -10,9 +10,33 @@ BitBoard RAYS[64][8];
 int SQUARE_DISTANCES[64][64];
 Direction RELATIVE_DIRECTION[64][64];
 BitBoard BB_LINES[64][64];
+BitBoard BB_FORWARD[2][64];
+BitBoard FORWARD_SPAN[2][64];
+BitBoard FORWARD_DOUBLE_SQUARES[2][64];
 
 namespace bits {
 	int ms1bTable[255];
+}
+
+// Helper functions.
+static BitBoard forward(const Color who, const Square sq) {
+	return who ? toBB(sq) - 1 & ~toBB(toRank(sq)) : (BB_FULL - toBB(sq) + 1 & ~toBB(toRank(sq)));
+}
+
+static BitBoard forward_span(const Color who, const Square sq) {
+	BitBoard forwardMask = FORWARD_SPAN[who][sq];
+	File sqFile = toFile(sq);
+	BitBoard fileMask = toBB(file_left(sqFile)) | toBB(sqFile) | toBB(file_right(sqFile));
+	return forwardMask & fileMask;
+}
+
+static BitBoard pawn_pushes(const Color who, const Square pawn) {
+	BitBoard result = shift(pawn, PAWN_DIRECTIONS[who]);
+
+	if (canDoublePush(who, pawn))
+		result |= shiftBy(pawn, PAWN_DIRECTIONS[who], 2);
+
+	return result;
 }
 
 void BitBoardInit() {
@@ -21,64 +45,6 @@ void BitBoardInit() {
 	for (int i = 0; i < 8; i++)
 		for (int j = std::pow(2, i); j <= std::pow(2, i + 1) - 1; j++)
 			bits::ms1bTable[j] = i;
-
-	for (Square sq = SQa1; sq <= SQh8; ++sq) {
-
-		BitBoard squareBB = toBB(sq);
-
-		// Pawn moves
-		// TODO: change to toRank() == sldkfjal�sf
-		if ((BB_RANK1 & squareBB | BB_RANK8 & squareBB) != BB_EMPTY) {
-			PAWN_PUSHES[WHITE][sq] = BB_EMPTY;
-			PAWN_PUSHES[BLACK][sq] = BB_EMPTY;
-			PAWN_CAPTURES[WHITE][sq] = BB_EMPTY;
-			PAWN_CAPTURES[BLACK][sq] = BB_EMPTY;
-		}
-		else {
-			for (int i = 0; i <= 1; i++)
-			{
-				Color c = Color(i);
-				PAWN_PUSHES[c][sq] = shift(squareBB, PAWN_DIRECTIONS[c]);
-				PAWN_CAPTURES[c][sq] = shift(~BB_FILEH & squareBB, Direction(PAWN_DIRECTIONS[c] + EAST)) |
-					shift(~BB_FILEA & squareBB, Direction(PAWN_DIRECTIONS[c] + WEST));
-
-				if (toRank(sq) == PAWN_DOUBLE_GO_FORWARD_ON_THE_CHESSBOARD_NON_EN_PASSANT_FOR_WHITE_AND_BLACK[c]) {
-					PAWN_PUSHES[c][sq] |= shiftBy(squareBB, PAWN_DIRECTIONS[c], 2);
-				}
-			}
-		}
-
-		// King moves
-		KING_ATTACKS[sq] = squareBB;
-		KING_ATTACKS[sq] |= shift((KING_ATTACKS[sq] & ~BB_RANK1), SOUTH);
-		KING_ATTACKS[sq] |= shift((KING_ATTACKS[sq] & ~BB_RANK8), NORTH);
-		KING_ATTACKS[sq] |= shift((KING_ATTACKS[sq] & ~BB_FILEA), WEST);
-		KING_ATTACKS[sq] |= shift((KING_ATTACKS[sq] & ~BB_FILEH), EAST);
-		KING_ATTACKS[sq] ^= squareBB;
-
-		// Knight moves
-		KNIGHT_ATTACKS[sq] = BB_EMPTY;
-		KNIGHT_ATTACKS[sq] |= (~(BB_RANK1 | BB_RANK2 | BB_FILEA) & squareBB) >> 17;
-		KNIGHT_ATTACKS[sq] |= (~(BB_RANK1 | BB_FILEA | BB_FILEB) & squareBB) >> 10;
-		KNIGHT_ATTACKS[sq] |= (~(BB_RANK8 | BB_FILEA | BB_FILEB) & squareBB) << 6;
-		KNIGHT_ATTACKS[sq] |= (~(BB_RANK7 | BB_RANK8 | BB_FILEA) & squareBB) << 15;
-		KNIGHT_ATTACKS[sq] |= (~(BB_RANK7 | BB_RANK8 | BB_FILEH) & squareBB) << 17;
-		KNIGHT_ATTACKS[sq] |= (~(BB_RANK8 | BB_FILEG | BB_FILEH) & squareBB) << 10;
-		KNIGHT_ATTACKS[sq] |= (~(BB_RANK1 | BB_FILEG | BB_FILEH) & squareBB) >> 6;
-		KNIGHT_ATTACKS[sq] |= (~(BB_RANK1 | BB_RANK2 | BB_FILEH) & squareBB) >> 15;
-
-		// Distances and directions.
-		for (Square sq2 = SQa1; sq2 <= SQh8; ++sq2) {
-			SQUARE_DISTANCES[sq][sq2] = std::max(distance<Rank>(sq, sq2), distance<Rank>(sq, sq2));
-
-			int x = toFile(sq2) > toFile(sq) ? 1 : (toFile(sq2) < toFile(sq) ? -1 : 0);
-			int y = toRank(sq2) > toRank(sq) ? 1 : (toRank(sq2) < toRank(sq) ? -1 : 0);
-			RELATIVE_DIRECTION[sq][sq2] = Direction(x + y);
-
-			Direction relDir = RELATIVE_DIRECTION[sq][sq2];
-			BB_LINES[sq][sq2] = RAYS[sq][directionIndex(relDir)] & RAYS[sq2][directionIndex(-relDir)];
-		}
-	}
 
 	// Calculate the rays.
 	for (int i = 0; i < 8; i++) {
@@ -106,6 +72,74 @@ void BitBoardInit() {
 			}
 
 			RAYS[sq][i] = b;
+		}
+	}
+
+	for (Square sq = SQa1; sq <= SQh8; ++sq) {
+
+		BitBoard squareBB = toBB(sq);
+
+		// spans and forwardbb
+		for (int i = 0; i <= 1; ++i) {
+			Color c = Color(i);
+
+			BB_FORWARD[c][sq] = forward(c, sq);
+			FORWARD_SPAN[c][sq] = forward_span(c, sq);
+
+			Rank sqRank = toRank(sq);
+			FORWARD_DOUBLE_SQUARES[c][sq] = c ? (squareBB << (sqRank + 1)) | (squareBB << (sqRank + 2)) :
+				(squareBB >> (sqRank + 1)) | (squareBB >> (sqRank + 2));
+		}
+
+		// Pawn moves
+		// TODO: change to toRank() == sldkfjal�sf
+		if ((BB_RANK1 & squareBB | BB_RANK8 & squareBB) != BB_EMPTY) {
+			PAWN_PUSHES[WHITE][sq] = BB_EMPTY;
+			PAWN_PUSHES[BLACK][sq] = BB_EMPTY;
+
+			PAWN_CAPTURES[WHITE][sq] = BB_EMPTY;
+			PAWN_CAPTURES[BLACK][sq] = BB_EMPTY;
+		}
+		else {
+			for (int i = 0; i <= 1; i++)
+			{
+				Color c = Color(i);
+				PAWN_CAPTURES[c][sq] = shift(~BB_FILEH & squareBB, Direction(PAWN_DIRECTIONS[c] + EAST)) |
+					shift(~BB_FILEA & squareBB, Direction(PAWN_DIRECTIONS[c] + WEST));
+				
+				PAWN_PUSHES[c][sq] = pawn_pushes(c, sq);
+			}
+		}
+
+		// King moves
+		KING_ATTACKS[sq] = squareBB;
+		KING_ATTACKS[sq] |= shift((KING_ATTACKS[sq] & ~BB_RANK1), SOUTH);
+		KING_ATTACKS[sq] |= shift((KING_ATTACKS[sq] & ~BB_RANK8), NORTH);
+		KING_ATTACKS[sq] |= shift((KING_ATTACKS[sq] & ~BB_FILEA), WEST);
+		KING_ATTACKS[sq] |= shift((KING_ATTACKS[sq] & ~BB_FILEH), EAST);
+		KING_ATTACKS[sq] ^= squareBB;
+
+		// Knight moves
+		KNIGHT_ATTACKS[sq] = BB_EMPTY;
+		KNIGHT_ATTACKS[sq] |= (~(BB_RANK1 | BB_RANK2 | BB_FILEA) & squareBB) >> 17;
+		KNIGHT_ATTACKS[sq] |= (~(BB_RANK1 | BB_FILEA | BB_FILEB) & squareBB) >> 10;
+		KNIGHT_ATTACKS[sq] |= (~(BB_RANK8 | BB_FILEA | BB_FILEB) & squareBB) << 6;
+		KNIGHT_ATTACKS[sq] |= (~(BB_RANK7 | BB_RANK8 | BB_FILEA) & squareBB) << 15;
+		KNIGHT_ATTACKS[sq] |= (~(BB_RANK7 | BB_RANK8 | BB_FILEH) & squareBB) << 17;
+		KNIGHT_ATTACKS[sq] |= (~(BB_RANK8 | BB_FILEG | BB_FILEH) & squareBB) << 10;
+		KNIGHT_ATTACKS[sq] |= (~(BB_RANK1 | BB_FILEG | BB_FILEH) & squareBB) >> 6;
+		KNIGHT_ATTACKS[sq] |= (~(BB_RANK1 | BB_RANK2 | BB_FILEH) & squareBB) >> 15;
+
+		// Distances and directions.
+		for (Square sq2 = SQa1; sq2 <= SQh8; ++sq2) {
+			SQUARE_DISTANCES[sq][sq2] = std::max(distance<Rank>(sq, sq2), distance<Rank>(sq, sq2));
+
+			int x = toFile(sq2) > toFile(sq) ? 1 : (toFile(sq2) < toFile(sq) ? -1 : 0);
+			int y = toRank(sq2) > toRank(sq) ? 8 : (toRank(sq2) < toRank(sq) ? -8 : 0);
+			RELATIVE_DIRECTION[sq][sq2] = Direction(x + y);
+
+			Direction relDir = RELATIVE_DIRECTION[sq][sq2];
+			BB_LINES[sq][sq2] = RAYS[sq][directionIndex(relDir)] & RAYS[sq2][directionIndex(-relDir)];
 		}
 	}
 }

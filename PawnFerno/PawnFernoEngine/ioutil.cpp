@@ -44,6 +44,8 @@ namespace printing {
         return print(move::originSquare(m)) + print(move::destinationSquare(m));
     }
 
+    std::string print(Move m) { return print(m, BLACK); }
+
     std::string print(std::vector<Move> moves, Color who) {
         std::vector<Move>::iterator it;
         std::string result = "";
@@ -84,5 +86,16 @@ namespace printing {
         result += "\n";
 
         return result;
+    }
+}
+
+namespace move {
+    Move makeMove(std::string algMove) {
+        File f1 = File(algMove[0] - 'a');
+        Rank r1 = Rank(algMove[1] - '1');
+        File f2 = File(algMove[2] - 'a');
+        Rank r2 = Rank(algMove[3] - '1');
+
+        return move::makeMove(toSquare(f1, r1), toSquare(f2, r2));
     }
 }

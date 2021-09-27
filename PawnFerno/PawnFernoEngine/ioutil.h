@@ -8,6 +8,7 @@
 #include "misc.h"
 #include "fen.h"
 #include "move.h"
+#include "position.h"
 #include <iostream>
 
 /*inline std::ostream& operator<<(std::ostream& os, const BitBoard& bb) {
@@ -32,6 +33,8 @@ namespace printing {
 
 	std::string print(Move, Color);
 
+	std::string print(Move);
+
 	std::string print(std::vector<Move>, Color);
 	
 	std::string printSquareBB(Square);
@@ -40,6 +43,14 @@ namespace printing {
 	/// Prints a given charBB in a fancy way. (see Position::charBB)
 	/// </summary>
 	std::string printBoard(std::string);
+}
+
+namespace move {
+	/// <summary>
+	/// Converts the algebraic notation of the move into an actual move object.
+	/// This will only yield a pseudo move, and has to be confirmed in the position it shall be played in.
+	/// </summary>
+	Move makeMove(std::string);
 }
 
 #endif IOUTIL_INCLUDE

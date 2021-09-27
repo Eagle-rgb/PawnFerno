@@ -10,9 +10,7 @@
 // Direction + 9 and then lookup in this array yields the appropriate direction index.
 // -1 means no direction reaches this value.
 constexpr int DIRECTION_INDEXES[19] = { 3, 2, 1, -1, -1, -1, -1, -1, 4, -1, 0, -1, -1, -1, -1, -1, 5, 6, 7 };
-constexpr char RANK_CHARS[16] = { '1', '2', '3', '4', '5', '6', '7', '8', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ' };
-constexpr char FILE_CHARS[16] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ' };
-constexpr char PIECE_CHARS[8] = { 'p', 'n', 'b', 'r', 'q', 'k', ' ', ' ' };
+constexpr char PIECE_CHARS[13] = { 'P', 'N', 'B', 'R', 'Q', 'K', 'p', 'n', 'b', 'r', 'q', 'k', ' ' };
 
 typedef uint64_t BitBoard;
 
@@ -78,7 +76,7 @@ enum class Castling {
 
 enum class SCastling {
 	None = 0,
-	K = 0b1,
+	K = 0b01,
 	Q = 0b10
 };
 
@@ -132,23 +130,23 @@ constexpr PieceType toPieceType(char pt) {
 	}
 }
 
+constexpr Piece makeColoredPiece(const PieceType pt, const Color who) {
+	return pt == PIECENONE ? WB_PIECENONE : Piece(pt + 6 * who);
+}
+
 /// <summary>
 /// Returns the appropriate piece character for the given piece.
 /// This also considers the player to move, so if black move, the character will be uppercase.
 /// </summary>
-constexpr char toChar(const PieceType pt, const Color who) {
-	return pt == PIECENONE ? ' ' : 32 * (int)who + PIECE_CHARS[pt] - 32;
+inline char toChar(const PieceType pt, const Color who) {
+	return PIECE_CHARS[makeColoredPiece(pt, who)];
 }
 
-constexpr Piece makeColoredPiece(const PieceType pt, const Color who) {
-	return Piece(pt + 6 * who);
-}
-
-constexpr PieceType toPieceType(Piece piece) {
+constexpr PieceType toPieceType(const Piece piece) {
 	return piece < 6 ? PieceType(piece) : PieceType(piece - 6);
 }
 
-constexpr bool isOfColor(Piece piece, Color who) {
+constexpr bool isOfColor(const Piece piece, const Color who) {
 	return (piece < 6) ^ who;
 }
 
@@ -156,14 +154,14 @@ constexpr bool isOfColor(Piece piece, Color who) {
 /// Returns a character representation for a given rank (RANK1 -> 1)
 /// </summary>
 constexpr char rankChar(const Rank r) {
-	return RANK_CHARS[(int)r];
+	return '1' + r;
 }
 
 /// <summary>
 /// Returns a character representation for a given file (FILEA -> a)
 /// </summary>
 constexpr char fileChar(const File f) {
-	return FILE_CHARS[(int)f];
+	return 'a' + f;
 }
 
 /// <summary>
@@ -178,6 +176,10 @@ constexpr Castling toCastlingValue(const char c) {
 	case 'q': return Castling::q;
 	default: return Castling::None;
 	}
+}
+
+constexpr Castling toCastling(SCastling sc, Color who) {
+	return Castling((short)sc << who);
 }
 
 /// <summary>

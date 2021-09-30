@@ -90,6 +90,6 @@ namespace eval {
 	void init();
 
 	constexpr Score getPieceScore(const PieceType pt) { return PIECE_VALUES[pt]; }
-	constexpr Score getPieceSquareScore(const PieceType pt, const Square sq, const Color who) { return SQUARE_VALUES[who][pt][sq]; }
+	inline Score getPieceSquareScore(const PieceType pt, const Square sq, const Color who) { return SQUARE_VALUES[who][pt][sq]; }
 }
 #endif

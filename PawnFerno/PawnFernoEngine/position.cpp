@@ -616,7 +616,7 @@ Score Position::static_eval_for(Color who) const {
 	for (PieceType pt = PAWN; pt <= KING; ++pt) {
 		Piece coloredPiece = makeColoredPiece(pt, who);
 
-		for (int i = 0; i <= pieceCounts[coloredPiece]; ++i) {
+		for (int i = 0; i < pieceCounts[coloredPiece]; ++i) {
 			Square sq = pieceSquares[coloredPiece][i];
 			total += eval::getPieceSquareScore(pt, sq, who);
 			total += eval::getPieceScore(pt);
@@ -628,8 +628,8 @@ Score Position::static_eval_for(Color who) const {
 
 Score Position::static_eval() const {
 	if (isDraw()) return eval::VALUE_DRAW;
-	if (isMate()) return eval::VALUE_MATE;
-	return static_eval_for(player) - static_eval_for(!player);
+	if (isMate()) return player ? eval::VALUE_MATE : -eval::VALUE_MATE;
+	return static_eval_for(WHITE) - static_eval_for(BLACK);
 }
 
 std::string Position::charBB() const {

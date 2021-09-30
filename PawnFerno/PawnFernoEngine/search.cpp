@@ -1,14 +1,15 @@
 #include "search.h"
 
 namespace n_search {
-	SearchResult search(Search* s, int depth) {
+	SearchResult search(Search* s, int depth, int alpha, int beta, int colorCoeff) {
 		Position& pos = *(s->pos);
 		SearchResult res = EMPTYRESULT;
+		res.m_score = alpha;
 
 		if (depth == s->option.m_depth) {
 			pos.getLegalMovesAuto();  // to get mating status.
 			res.m_nodes = 1;
-			res.m_score = (-2 * pos.playerToMove() + 1) * s->pos->static_eval();
+			res.m_score = colorCoeff * s->pos->static_eval();
 			return res;
 		}
 
@@ -20,16 +21,24 @@ namespace n_search {
 			State a;
 			pos.makeMove(move, a); 
 
-			SearchResult recResult = -search(s, depth + 1);
+			SearchResult recResult = -search(s, depth + 1, -beta, -alpha, -colorCoeff);
 			recResult.m_move = move;
+
+			res.m_nodes += recResult.m_nodes;
 
 			if (recResult.m_score > bestScore) {
 				bestScore = recResult.m_score;
 				res.m_score = bestScore;
 				res.m_move = move;
+
+				alpha = res.m_score;
 			}
 
-			res.m_nodes += recResult.m_nodes;
+			if (alpha > beta) {
+				res.m_score = beta;  // We will never take this result, so just set it to the highest value, and by returning it, the lowest.
+				pos.undoMove(move);
+				return res;
+			}
 
 			pos.undoMove(move);
 		}
@@ -72,6 +81,10 @@ namespace n_search {
 		auto moveList = pos->getLegalMovesAuto();
 
 		s.bestResult = EMPTYRESULT;
+		int alpha = eval::VALUE_MATE;
+		int beta = -eval::VALUE_MATE;
+
+		int colorCoeff = pos->playerToMove() ? 1 : -1;
 
 		for (Move move : moveList) {
 			State a;
@@ -83,7 +96,7 @@ namespace n_search {
 				recResult = perft(&s, 1);
 			}
 			else {
-				recResult = -search(&s, 1);
+				recResult = -search(&s, 1, -beta, -alpha, colorCoeff);
 			}
 
 			std::cout << "info " << printing::print(move) << ": " << recResult.m_score << std::endl;
@@ -92,6 +105,7 @@ namespace n_search {
 
 			if (recResult > s.bestResult) {
 				s.bestResult = recResult;
+				alpha = recResult.m_score;
 			}
 
 			s.results.push_back(recResult);
@@ -113,7 +127,7 @@ namespace n_search {
 	unsigned int Search::totalNodes() {
 		unsigned int total = 0;
 
-		for (auto sr : results) {
+		for (const SearchResult& sr : results) {
 			total += sr.m_nodes;
 		}
 

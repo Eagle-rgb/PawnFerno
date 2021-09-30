@@ -7,7 +7,7 @@ void go(istringstream& ss, Position& pos, SearchOption& option) {
 	string token;
 
 	option.m_searchType = SearchType::NORMAL;
-	option.m_depth = 3;
+	option.m_depth = 5;
 
 	while (ss >> token) {
 		if (token == "perft") { option.m_searchType = SearchType::PERFT; ss >> option.m_depth; }

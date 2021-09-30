@@ -96,6 +96,11 @@ namespace move {
         File f2 = File(algMove[2] - 'a');
         Rank r2 = Rank(algMove[3] - '1');
 
+        if (algMove.size() == 5) {
+            PieceType promotionPiece = toPieceType(algMove[4]);
+            return move::makePromotionMove(toSquare(f1, r1), toSquare(f2, r2), promotionPiece);
+        }
+
         return move::makeMove(toSquare(f1, r1), toSquare(f2, r2));
     }
 }

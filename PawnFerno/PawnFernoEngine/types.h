@@ -17,6 +17,8 @@ typedef uint64_t BitBoard;
 // First 5 bits are the origin square, next 5 bits are the destination square.
 typedef unsigned short Move;
 
+typedef int Score;
+
 enum Square {
 	SQa1, SQb1, SQc1, SQd1, SQe1, SQf1, SQg1, SQh1,
 	SQa2, SQb2, SQc2, SQd2, SQe2, SQf2, SQg2, SQh2,

@@ -251,6 +251,10 @@ template <> inline int distance<Square>(Square a, Square b) { return SQUARE_DIST
 // Returns the relative direction from Square a to Square b.
 inline Direction relativeDirection(Square a, Square b) { return RELATIVE_DIRECTION[a][b]; }
 
+inline Square relativeSquare(Square sq, Color who) {
+	return who ? toSquare(File(7 - toFile(sq)), Rank(7 - toRank(sq))) : sq;
+}
+
 // Draws a line from a to b excluding both endpoints.
 inline BitBoard drawLine(Square a, Square b) {
 	return BB_LINES[a][b];

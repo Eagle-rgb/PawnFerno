@@ -15,8 +15,9 @@ namespace move {
 		std::vector<Move> moves;
 
 		while (destinations) {
+			Square dest = bits::popLSB(destinations);
 			for (PieceType p = KNIGHT; p <= QUEEN; ++p)
-				moves.push_back(makePromotionMove(from, bits::popLSB(destinations), p));
+				moves.push_back(makePromotionMove(from, dest, p));
 		}
 
 		return moves;

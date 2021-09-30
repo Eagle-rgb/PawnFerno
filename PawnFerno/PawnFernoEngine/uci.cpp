@@ -7,6 +7,7 @@ void go(istringstream& ss, Position& pos, SearchOption& option) {
 	string token;
 
 	option.m_searchType = SearchType::NORMAL;
+	option.m_depth = 3;
 
 	while (ss >> token) {
 		if (token == "perft") { option.m_searchType = SearchType::PERFT; ss >> option.m_depth; }
@@ -14,6 +15,47 @@ void go(istringstream& ss, Position& pos, SearchOption& option) {
 	}
 
 	n_search::start(&pos, option);
+}
+
+void position(istringstream& ss, Position& pos, std::vector<Move>& movesPlayed, State* state, bool newGame) {
+	string token;
+
+	if (newGame) {
+		movesPlayed.clear();
+	}
+
+	ss >> token;
+
+	if (token == "fen" && newGame) {
+		std::vector<string> fenParts;
+
+		while (ss >> token) {
+			if (token == "moves") break;
+			fenParts.push_back(token);
+		}
+
+		pos = Position(fenParts, state);
+	}
+	else if (token == "startpos" && newGame) {
+		pos = Position(startPosFen, state);
+		ss >> token;
+	}
+	else ss >> skipws >> token;
+
+	if (token != "moves") return;
+
+	int moveCount = movesPlayed.size();
+	int i = 0;
+
+	while (ss >> token) {
+		if (i++ < moveCount) continue;
+		if (!move::isAlgebraic(token)) { cout << "Invalid moves!\n"; return; }
+		Move m = move::makeMove(token);
+		movesPlayed.push_back(m);
+
+		m = pos.makeLegalFromPseudo(m);
+		pos.makeMoveForgetful(m);
+	}
 }
 
 void ucicmd() {
@@ -35,8 +77,11 @@ void uci::uci_loop() {
 	SearchOption option;
 
 	std::string cmd, token;
+	std::vector<Move> movesPlayed;
 
-	while (token != "quit") {
+	bool newGame = true;
+
+	do {
 		if (!getline(cin, cmd)) cmd = "quit";
 
 		istringstream ss(cmd);
@@ -44,9 +89,15 @@ void uci::uci_loop() {
 		ss >> skipws >> token;
 
 		if (token == "go") go(ss, pos, option);
+
+		else if (token == "position") {
+			position(ss, pos, movesPlayed, &state, newGame); newGame = false;
+		}
 		else if (token == "uci") ucicmd();
 		else if (token == "isready") cout << "readyok\n";
+		else if (token == "ucinewgame") newGame = true;
 		else if (token == "print") cout << pos.print() << "\n";
 		else if (move::isAlgebraic(token)) makeMove(token, pos);
-	}
+		else cout << "Invalid command!\n";
+	} while (token != "quit");
 }

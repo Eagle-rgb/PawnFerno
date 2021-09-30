@@ -5,6 +5,7 @@
 
 #include "position.h"
 #include "ioutil.h"
+#include "evaluation.h"
 #include <random>
 #include <iostream>
 #include <string>
@@ -28,16 +29,22 @@ namespace n_search {
 
 	struct SearchResult {
 		unsigned int m_nodes;
+		int m_score = 0;
 		Move m_move;
 
 		SearchResult& operator+=(SearchResult& res);
+		inline bool operator<(SearchResult& other) { return m_score < other.m_score; }
+		inline bool operator>(SearchResult& other) { return m_score > other.m_score; }
+		inline bool operator<=(SearchResult& other) { return m_score <= other.m_score; }
+		inline bool operator>=(SearchResult& other) { return m_score >= other.m_score; }
+		inline SearchResult& operator-() { m_score = -m_score; return *this; }
 	};
 
 	struct Search {
 		Position* pos;
 		SearchOption option;
 		std::vector<SearchResult> results;
-		Move bestMove;
+		SearchResult bestResult;
 
 		TimePoint t_begin, t_end;
 
@@ -55,8 +62,8 @@ namespace n_search {
 
 	std::ostream& operator<<(std::ostream& stream, Search& search);
 
-	const SearchResult emptyResult = SearchResult{ 0, 0 };
-	const SearchResult oneResult = SearchResult{ 1, 0 };
+	const SearchResult EMPTYRESULT = SearchResult{ 0, eval::VALUE_MATE - 100, 0 };
+	const SearchResult ONERESULT = SearchResult{ 1, eval::VALUE_MATE - 100, 0 };
 
 	void start(Position* pos, SearchOption& option);
 }

@@ -7,6 +7,7 @@
 #include "ioutil.h"
 #include "fen.h"
 #include "move.h"
+#include "evaluation.h"
 #include "state.h"
 #include <vector>
 #include <string>
@@ -54,9 +55,12 @@ private:
 
 	std::vector<Move> getLegalCastlings() const;
 
+	Score static_eval_for(Color) const;
+
 public:
 	Position(State*);
 	Position(std::string fen, State*);
+	Position(std::vector<std::string>& fenParts, State*);
 	Position(Position&) = delete;  // We do not want a copy constructor for now. Best to disable it.
 
 	/// <summary>
@@ -111,8 +115,21 @@ public:
 
 	/// <summary>
 	/// Returns true if the current player is in double check.
+	/// PREREQUISITE: 0b1
 	/// </summary>
 	bool inDoubleCheck() const;
+
+	/// <summary>
+	/// Returns true if the current player is mated.
+	/// PREREQUISITE: 0b1001
+	/// </summary>
+	bool isMate() const;
+
+	/// <summary>
+	/// Returns true if the current position is a draw.
+	/// PREREQUISITE: 0b1001
+	/// </summary>
+	bool isDraw() const;
 
 	/// <summary>
 	/// Returns true if the piece on the given square is pinned.
@@ -174,6 +191,13 @@ public:
 	/// This takes a pseudo move - mostlikely generated from algebraic notation - and converts it into a move fitting the current position.
 	/// </summary>
 	Move makeLegalFromPseudo(const Move);
+
+	// EVALUATION TOOLS
+	/// <summary>
+	/// Statically evaluates this position.
+	/// PREREQUISITES: 0b1001
+	/// </summary>
+	Score static_eval() const;
 
 	/// <summary>
 	/// Returns a character-string like in FEN but without the '/' and with spaces for no pieces.

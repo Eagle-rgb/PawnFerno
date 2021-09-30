@@ -1,30 +1,35 @@
 #include "search.h"
 
 namespace n_search {
-	SearchResult search(Search* s, int depth, bool root = false) {
+	SearchResult search(Search* s, int depth) {
 		Position& pos = *(s->pos);
-		SearchResult res = emptyResult;
+		SearchResult res = EMPTYRESULT;
 
 		if (depth == s->option.m_depth) {
+			pos.getLegalMovesAuto();  // to get mating status.
 			res.m_nodes = 1;
-			return res ;
+			res.m_score = (-2 * pos.playerToMove() + 1) * s->pos->static_eval();
+			return res;
 		}
 
 		auto moveList = pos.getLegalMovesAuto();
+
+		Score bestScore = eval::VALUE_MATE - 1;
 
 		for (Move move : moveList) {
 			State a;
 			pos.makeMove(move, a); 
 
-			SearchResult recResult = search(s, depth + 1);
+			SearchResult recResult = -search(s, depth + 1);
 			recResult.m_move = move;
 
-			if (root) {
-				s->results.push_back(recResult);
+			if (recResult.m_score > bestScore) {
+				bestScore = recResult.m_score;
+				res.m_score = bestScore;
+				res.m_move = move;
 			}
-			else {
-				res.m_nodes += recResult.m_nodes;
-			}
+
+			res.m_nodes += recResult.m_nodes;
 
 			pos.undoMove(move);
 		}
@@ -32,29 +37,77 @@ namespace n_search {
 		return res;
 	}
 
-	void searchTemp(Search* s, int depth, bool root = false) {
+	SearchResult perft(Search* s, int depth) {
+		if (depth == s->option.m_depth) {
+			return ONERESULT;
+		}
+
+		auto moveList = s->pos->getLegalMovesAuto();
+		SearchResult total = EMPTYRESULT;
+
+		for (Move move : moveList) {
+			State a;
+			s->pos->makeMove(move, a);
+			total.m_nodes += perft(s, depth + 1).m_nodes;
+			s->pos->undoMove(move);
+		}
+
+		return total;
+	}
+
+	SearchResult searchTemp(Search* s, int depth, bool root = false) {
 		auto moveList = s->pos->getLegalMovesAuto();
 
 		unsigned short randNum = std::rand() % moveList.size();
 		s->pos->makeMoveForgetful(moveList[randNum]);
-		s->bestMove = moveList[randNum];
+		s->bestResult.m_move = moveList[randNum];
+
+		return SearchResult();
 	}
 
 	void start(Position* pos, SearchOption& option) {
 		Search s(pos, option);
 		s.t_begin = Clock::now();
 
-		switch (option.m_searchType)
-		{
-		case SearchType::PERFT: search(&s, 0, true);
-		case SearchType::NORMAL: searchTemp(&s, 0, true);
-		default:
-			break;
+		auto moveList = pos->getLegalMovesAuto();
+
+		s.bestResult = EMPTYRESULT;
+
+		for (Move move : moveList) {
+			State a;
+			
+			pos->makeMove(move, a);
+			SearchResult recResult;
+			
+			if (option.m_searchType == SearchType::PERFT) {
+				recResult = perft(&s, 1);
+			}
+			else {
+				recResult = -search(&s, 1);
+			}
+
+			std::cout << "info " << printing::print(move) << ": " << recResult.m_score << std::endl;
+
+			recResult.m_move = move;
+
+			if (recResult > s.bestResult) {
+				s.bestResult = recResult;
+			}
+
+			s.results.push_back(recResult);
+
+			pos->undoMove(move);
 		}
 
 		s.t_end = Clock::now();
 		std::cout << s;
-		std::cout << "bestmove " << printing::print(s.bestMove) << "\n";
+
+		if (option.m_searchType != SearchType::PERFT) {
+			if (s.bestResult.m_move != 0) {
+				std::cout << "bestmove " << printing::print(s.bestResult.m_move) << "\n";
+			}
+			else std::cout << "info No move could be found.\n";
+		}
 	}
 
 	unsigned int Search::totalNodes() {

@@ -16,11 +16,14 @@ Position::Position(State* state) {
 }
 
 Position::Position(std::string fen, State* state) {
-	// Initialization, default values.
-	clear();
-	
-	this->state = state;
 	std::vector<std::string> fenParts = misc::split(fen, ' ');
+
+	*this = Position(fenParts, state);
+}
+
+Position::Position(std::vector<std::string>& fenParts, State* state) {
+	clear();
+	this->state = state;
 
 	std::vector<std::string>::iterator it = fenParts.begin();
 
@@ -53,11 +56,11 @@ Position::Position(std::string fen, State* state) {
 	++it;
 
 	// Castling rights.
-	state -> castlingRights = (short)fen::castlingRights(*it);
+	state->castlingRights = (short)fen::castlingRights(*it);
 	++it;
 
 	// En Passant square.
-	state -> enPassant = fen::enPassant(*it);
+	state->enPassant = fen::enPassant(*it);
 	++it;
 
 	// Half move clock. TODO
@@ -102,6 +105,16 @@ bool Position::inCheck() const {
 bool Position::inDoubleCheck() const {
 	assert((state->moveGenCheck & generatedEnemyAttacks) != 0);
 	return more_than_one(BB_wb[player] & BB_pieces[KING] & state->enemyAttacks);
+}
+
+bool Position::isMate() const {
+	assert((state->moveGenCheck & generatedLegalMoves) != 0);
+	return state->legalMoves.size() == 0 && inCheck();
+}
+
+bool Position::isDraw() const {
+	assert((state->moveGenCheck & generatedLegalMoves) != 0);
+	return state->legalMoves.size() == 0 && !inCheck();
 }
 
 bool Position::isPinned(const Square sq) const {
@@ -577,14 +590,46 @@ void Position::undoMove(const Move& m) {
 Move Position::makeLegalFromPseudo(const Move m) {
 	Square origin = move::originSquare(m);
 	Square destination = move::destinationSquare(m);
+	PieceType promotionPiece = move::getPromotionPiece(m);
 
 	if (!(state->moveGenCheck & generatedLegalMoves)) getLegalMovesAuto();
 
 	for (Move mov : state->legalMoves) {
-		if (move::originSquare(mov) == origin && move::destinationSquare(mov) == destination) return mov;
+		if (!move::isPromotion(m)) {
+			if (move::originSquare(mov) == origin && move::destinationSquare(mov) == destination) return mov;
+		}
+		else {
+			if (!move::isPromotion(mov)) continue;
+			PieceType movPromotionPiece = move::getPromotionPiece(mov);
+
+			if (move::originSquare(mov) == origin && move::destinationSquare(mov) == destination && promotionPiece == movPromotionPiece) return mov;
+		}
+
 	}
 
 	return 0;
+}
+
+Score Position::static_eval_for(Color who) const {
+	Score total = 0;
+
+	for (PieceType pt = PAWN; pt <= KING; ++pt) {
+		Piece coloredPiece = makeColoredPiece(pt, who);
+
+		for (int i = 0; i <= pieceCounts[coloredPiece]; ++i) {
+			Square sq = pieceSquares[coloredPiece][i];
+			total += eval::getPieceSquareScore(pt, sq, who);
+			total += eval::getPieceScore(pt);
+		}
+	}
+
+	return total;
+}
+
+Score Position::static_eval() const {
+	if (isDraw()) return eval::VALUE_DRAW;
+	if (isMate()) return eval::VALUE_MATE;
+	return static_eval_for(player) - static_eval_for(!player);
 }
 
 std::string Position::charBB() const {

@@ -7,7 +7,7 @@ void go(istringstream& ss, Position& pos, SearchOption& option) {
 	string token;
 
 	option.m_searchType = SearchType::NORMAL;
-	option.m_depth = 5;
+	option.m_depth = 4;
 
 	while (ss >> token) {
 		if (token == "perft") { option.m_searchType = SearchType::PERFT; ss >> option.m_depth; }
@@ -96,6 +96,7 @@ void uci::uci_loop() {
 		else if (token == "uci") ucicmd();
 		else if (token == "isready") cout << "readyok\n";
 		else if (token == "ucinewgame") newGame = true;
+		else if (token == "fen") cout << "info fen " << pos.toFen() << "\n";
 		else if (token == "print") cout << pos.print() << "\n";
 		else if (move::isAlgebraic(token)) makeMove(token, pos);
 		else cout << "Invalid command!\n";

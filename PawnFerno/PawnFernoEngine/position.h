@@ -199,6 +199,8 @@ public:
 	/// </summary>
 	Score static_eval() const;
 
+	std::string toFen() const;
+
 	/// <summary>
 	/// Returns a character-string like in FEN but without the '/' and with spaces for no pieces.
 	/// </summary>

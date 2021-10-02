@@ -632,6 +632,57 @@ Score Position::static_eval() const {
 	return static_eval_for(WHITE) - static_eval_for(BLACK);
 }
 
+std::string Position::toFen() const {
+	std::string result = "";
+	int emptySquareCount = 0;
+
+	for (Rank i = RANK1; i <= RANK8; ++i) {
+		for (File j = FILEA; j <= FILEH; ++j) {
+			Color who = WHITE;
+			Square sq = toSquare(j, i);
+			
+			PieceType pieceOn = getPieceOnAny(sq, who);
+
+			if (pieceOn == PIECENONE) {
+				++emptySquareCount;
+				continue;
+			}
+
+			if (emptySquareCount > 0) {
+				result += '0' + emptySquareCount;
+				emptySquareCount = 0;
+			}
+
+			result += toChar(pieceOn, who);
+		}
+
+		if (emptySquareCount > 0) {
+			result += '0' + emptySquareCount;
+			emptySquareCount = 0;
+		}
+
+		if (i != RANK8) result += "/";
+	}
+
+	result += player ? " b " : " w ";
+
+	if (state->castlingRights != 0)
+	{
+		if (state->canCastleSide(SCastling::K, WHITE)) result += "K";
+		if (state->canCastleSide(SCastling::Q, WHITE)) result += "Q";
+		if (state->canCastleSide(SCastling::K, BLACK)) result += "k";
+		if (state->canCastleSide(SCastling::Q, BLACK)) result += "q";
+		result += " ";
+	} else result += "- ";
+
+	if (state->enPassant != SQNONE) result += printing::print(state->enPassant);
+	else result += "-";
+
+
+	// TODO half- and fullmove counters.
+	return result;
+}
+
 std::string Position::charBB() const {
 	std::string result = "";
 

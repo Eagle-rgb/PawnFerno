@@ -3,8 +3,11 @@
 #ifndef EVALUATION_INCLUDED
 #define EVALUATION_INCLUDED
 
+#include <algorithm>
 #include "types.h"
 #include "bitboard.h"
+#include "move.h"
+#include <vector>
 
 namespace eval {
 	constexpr Score PIECE_VALUES[6] = { 100, 300, 350, 500, 900, 100000 };

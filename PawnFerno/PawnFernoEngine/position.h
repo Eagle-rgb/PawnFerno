@@ -199,6 +199,10 @@ public:
 	/// </summary>
 	Score static_eval() const;
 
+	Score eval_move(const Move& m) const;
+
+	void sortMoves(MoveList& moves) const;
+
 	std::string toFen() const;
 
 	/// <summary>

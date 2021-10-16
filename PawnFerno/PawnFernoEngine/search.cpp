@@ -14,7 +14,7 @@ namespace n_search {
 		}
 
 		auto moveList = pos.getLegalMovesAuto();
-
+		pos.sortMoves(moveList);  // circa 25% speedup!
 		Score bestScore = eval::VALUE_MATE - 1;
 
 		for (Move move : moveList) {

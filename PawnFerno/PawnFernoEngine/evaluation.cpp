@@ -1,7 +1,6 @@
 #include "evaluation.h"
 
 namespace eval {
-
 	Score SQUARE_VALUES[2][6][64];
 
 	void init() {

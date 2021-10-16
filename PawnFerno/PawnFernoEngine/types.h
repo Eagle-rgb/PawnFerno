@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <string>
+#include <vector>
 
 // Direction + 9 and then lookup in this array yields the appropriate direction index.
 // -1 means no direction reaches this value.
@@ -16,6 +17,8 @@ typedef uint64_t BitBoard;
 
 // First 5 bits are the origin square, next 5 bits are the destination square.
 typedef unsigned short Move;
+
+typedef std::vector<Move> MoveList;
 
 typedef int Score;
 

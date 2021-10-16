@@ -632,6 +632,59 @@ Score Position::static_eval() const {
 	return static_eval_for(WHITE) - static_eval_for(BLACK);
 }
 
+Score Position::eval_move(const Move& m) const {
+	Score moveScore = 0;
+	Square originSquare = move::originSquare(m);
+	Square destinationSquare = move::destinationSquare(m);
+	PieceType movedPiece = getPieceOn(originSquare);
+	PieceType capturedPiece = getPieceOn(destinationSquare, !player);
+
+	if (move::isEnPassant(m)) capturedPiece = PAWN;
+
+	if (capturedPiece != PIECENONE) {
+		moveScore += eval::getPieceScore(capturedPiece) - eval::getPieceScore(movedPiece) + 1000;
+	}
+
+	moveScore += eval::getPieceSquareScore(movedPiece, destinationSquare, player) - eval::getPieceSquareScore(movedPiece, originSquare, player);
+
+	return moveScore;
+}
+
+void Position::sortMoves(MoveList& moves) const {
+	int size = moves.size();
+	if (size == 0) return;
+
+	std::vector<Score> moveScores;
+	moveScores.resize(size);
+
+	std::vector<Score>::iterator scoresIt = moveScores.begin();
+	MoveList::iterator movesIt = moves.begin();
+
+	while (scoresIt != moveScores.end()) {
+		*scoresIt = eval_move(*movesIt);
+		++scoresIt; ++movesIt;
+	}
+
+	// Yes, selectionsort. We will improve on this later.
+	for (int i = 0; i < size - 1; ++i) {
+		MoveList::iterator bestMoveIt = moves.begin() + i;
+		scoresIt = moveScores.begin() + i;
+		Score bestScore = *scoresIt;
+		movesIt = moves.begin() + i + 1;
+
+		while (movesIt != moves.end()) {
+			if (bestScore < *scoresIt) {
+				bestScore = *scoresIt;
+				bestMoveIt = movesIt;
+			}
+
+			++scoresIt; ++movesIt;
+		}
+
+		std::iter_swap(bestMoveIt, moves.begin() + i);
+	}
+}
+
 std::string Position::toFen() const {
 	std::string result = "";
 	int emptySquareCount = 0;

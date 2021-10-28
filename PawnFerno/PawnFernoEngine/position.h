@@ -55,6 +55,8 @@ private:
 
 	std::vector<Move> getLegalCastlings() const;
 
+	void updateRepetition();
+
 	Score static_eval_for(Color) const;
 
 public:
@@ -202,6 +204,12 @@ public:
 	Score eval_move(const Move& m) const;
 
 	void sortMoves(MoveList& moves) const;
+
+	unsigned int getRule50Count() const;
+
+	unsigned int getPlyCount() const;
+
+	unsigned int getFullMoveCount() const;
 
 	std::string toFen() const;
 

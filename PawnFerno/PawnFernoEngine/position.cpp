@@ -63,9 +63,19 @@ Position::Position(std::vector<std::string>& fenParts, State* state) {
 	state->enPassant = fen::enPassant(*it);
 	++it;
 
-	// Half move clock. TODO
+	// Rule50
+	if (it != fenParts.end()) {
+		state->rule50 = fen::halfClock(*it);
+		++it;
+	}
+	else state->rule50 = 0;
 
-	// Full move clock. TODO
+	// Half move clock. TODO
+	if (it != fenParts.end()) {
+		state->ply = fen::halfClock(*it);
+		++it;
+	}
+	else state->ply = 0;
 }
 
 void Position::clear() {
@@ -114,7 +124,8 @@ bool Position::isMate() const {
 
 bool Position::isDraw() const {
 	assert((state->moveGenCheck & generatedLegalMoves) != 0);
-	return state->legalMoves.size() == 0 && !inCheck();
+	return state->legalMoves.size() == 0 && !inCheck()
+		|| state->rule50 >= 50;
 }
 
 bool Position::isPinned(const Square sq) const {
@@ -461,9 +472,12 @@ void Position::makeMove(const Move& m, State& newState) {
 	state->enPassant = SQNONE;
 	state->moveGenCheck = 0;
 
+	bool incrRule50 = false;
+
 	// Perform captures.
 	if (capturedPiece != PIECENONE) {
 		removePiece(destinationSquare, capturedPiece, !player);
+		incrRule50 = true;
 	}
 
 	if (movedPiece == PAWN) {
@@ -486,6 +500,8 @@ void Position::makeMove(const Move& m, State& newState) {
 			addPiece(destinationSquare, promotionPiece, player);
 			removePiece(originSquare, PAWN, player);
 		}
+
+		incrRule50 = true;
 	}
 
 	// If king move, then remove castling rights.
@@ -530,8 +546,12 @@ void Position::makeMove(const Move& m, State& newState) {
 	if (!move::isPromotion(m))
 		movePiece(originSquare, destinationSquare, movedPiece, player);
 
-	state -> capturedPiece = capturedPiece;
+	state->capturedPiece = capturedPiece;
 	player = !player;
+
+	++state->ply;
+
+	if (incrRule50) ++state->rule50; else state->rule50 = 0;
 }
 
 void Position::makeMoveForgetful(const Move& m) {
@@ -682,6 +702,26 @@ void Position::sortMoves(MoveList& moves) const {
 		}
 
 		std::iter_swap(bestMoveIt, moves.begin() + i);
+	}
+}
+
+unsigned int Position::getRule50Count() const {
+	return state->rule50;
+}
+
+unsigned int Position::getPlyCount() const {
+	return state->ply;
+}
+
+unsigned int Position::getFullMoveCount() const {
+	return state->ply / 2 + 1;
+}
+
+void Position::updateRepetition() {
+	State* ptr = state->previousState;
+
+	while (ptr != nullptr && ptr->rule50 > 0) {
+		
 	}
 }
 

@@ -14,6 +14,7 @@ constexpr int DIRECTION_INDEXES[19] = { 3, 2, 1, -1, -1, -1, -1, -1, 4, -1, 0, -
 constexpr char PIECE_CHARS[13] = { 'P', 'N', 'B', 'R', 'Q', 'K', 'p', 'n', 'b', 'r', 'q', 'k', ' ' };
 
 typedef uint64_t BitBoard;
+typedef uint64_t HashKey;
 
 // First 5 bits are the origin square, next 5 bits are the destination square.
 typedef unsigned short Move;

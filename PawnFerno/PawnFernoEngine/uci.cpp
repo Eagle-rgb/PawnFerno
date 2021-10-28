@@ -15,6 +15,8 @@ void go(istringstream& ss, Position& pos, SearchOption& option) {
 	}
 
 	n_search::start(&pos, option);
+
+	(void)0;
 }
 
 void position(istringstream& ss, Position& pos, std::vector<Move>& movesPlayed, State* state, bool newGame) {
@@ -56,11 +58,15 @@ void position(istringstream& ss, Position& pos, std::vector<Move>& movesPlayed, 
 		m = pos.makeLegalFromPseudo(m);
 		pos.makeMoveForgetful(m);
 	}
+
+	(void)0;
 }
 
 void ucicmd() {
 	std::cout << uci::engine_identification
 		<< "\nuciok\n";
+
+	(void)0;
 }
 
 void makeMove(string m, Position& pos) {
@@ -69,6 +75,8 @@ void makeMove(string m, Position& pos) {
 
 	if (k == 0) { cout << "info The given move was illegal!\n\n"; return; }
 	pos.makeMoveForgetful(k);
+
+	(void)0;
 }
 
 void uci::uci_loop() {
@@ -101,4 +109,6 @@ void uci::uci_loop() {
 		else if (move::isAlgebraic(token)) makeMove(token, pos);
 		else cout << "Invalid command!\n";
 	} while (token != "quit");
+
+	(void)0;
 }

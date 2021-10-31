@@ -106,7 +106,7 @@ void uci::uci_loop() {
 		else if (token == "ucinewgame") newGame = true;
 		else if (token == "fen") cout << "info fen " << pos.toFen() << "\n";
 		else if (token == "print") cout << pos.print() << "\n";
-		else if (token == "key") cout << pos.getKey() << "\n";
+		else if (token == "key") cout << "info key " << pos.getKey() << "\n";
 		else if (move::isAlgebraic(token)) makeMove(token, pos);
 		else cout << "Invalid command!\n";
 	} while (token != "quit");

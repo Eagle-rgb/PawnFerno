@@ -16,6 +16,7 @@ struct State {
 	// Important for position equality.
 	short castlingRights;
 	Square enPassant;
+	HashKey key;
 
 	// -------------------------------
 	// Not important for position equality.
@@ -47,9 +48,14 @@ struct State {
 		previousState = nullptr,
 		rule50 = 0,
 		ply = 0;
+		key = 0;
 	}
 
 	inline bool canCastleSide(SCastling c, Color who) { return (short)toCastling(c, who) & castlingRights; }
+
+	// Equality comparison based only on the hash key!!
+	inline bool operator==(State& other) { return key == other.key; }
+	inline bool operator!=(State& other) { return key != other.key; }
 };
 
 #endif

@@ -153,7 +153,7 @@ namespace n_search {
 		std::string result = "";
 
 		if (search.option.m_searchType == SearchType::PERFT) {
-			for (SearchResult res : search.results) {
+			for (const SearchResult& res : search.results) {
 				result += "info " + printing::print(res.m_move, player) + ": " + std::to_string(res.m_nodes) + "\n";
 			}
 

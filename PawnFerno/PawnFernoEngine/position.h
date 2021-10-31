@@ -9,6 +9,7 @@
 #include "move.h"
 #include "evaluation.h"
 #include "state.h"
+#include "hashing.h"
 #include <vector>
 #include <string>
 #include <chrono>
@@ -56,6 +57,11 @@ private:
 	std::vector<Move> getLegalCastlings() const;
 
 	void updateRepetition();
+
+	/// <summary>
+	/// Generates the hashkey for the current position. Only use for initialization.
+	/// </summary>
+	HashKey generateKey() const;
 
 	Score static_eval_for(Color) const;
 
@@ -210,6 +216,8 @@ public:
 	unsigned int getPlyCount() const;
 
 	unsigned int getFullMoveCount() const;
+
+	HashKey getKey() const;
 
 	std::string toFen() const;
 

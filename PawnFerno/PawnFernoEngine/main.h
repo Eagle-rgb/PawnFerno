@@ -5,6 +5,7 @@
 
 #include "position.h"
 #include "perft.h"
+#include "hashing.h"
 #include "evaluation.h"
 #include <iostream>
 #include <chrono>

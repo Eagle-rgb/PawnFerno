@@ -13,6 +13,7 @@ Position::Position(State* state) {
 
 	player = WHITE;
 	this->state = state;
+	generateKey();
 }
 
 Position::Position(std::string fen, State* state) {
@@ -76,6 +77,8 @@ Position::Position(std::vector<std::string>& fenParts, State* state) {
 		++it;
 	}
 	else state->ply = 0;
+
+	generateKey();
 }
 
 void Position::clear() {
@@ -94,6 +97,23 @@ void Position::clear() {
 	}
 
 	player = WHITE;
+}
+
+HashKey Position::generateKey() const {
+	HashKey key = 0;
+
+	for (Piece p = W_PAWN; p <= B_KING; ++p) {
+		for (int i = 0; i < pieceCounts[p]; ++i) {
+			key ^= hashing::squareKey(pieceSquares[p][i], p);
+		}
+	}
+
+	if (player) key ^= hashing::COLORKEY;
+	if (state->enPassant != SQNONE) key ^= hashing::enpassantKey(toFile(state->enPassant));
+	if (state->castlingRights) key ^= hashing::castlingKey(state->castlingRights);
+	state->key = key;
+
+	return key;
 }
 
 Color Position::playerToMove() const {
@@ -433,9 +453,12 @@ void Position::movePiece(const Square origin, const Square destination, const Pi
 	BB_pieces[pt] ^= orDesBB;
 
 	pieceSquares[piece][findPieceSquaresIndex(piece, origin)] = destination;
+
+	state->key ^= hashing::squareKey(origin, piece) ^ hashing::squareKey(destination, piece);
 }
 
 void Position::removePiece(const Square sq, const PieceType pt, const Color who) {
+	assert(pt != PIECENONE);
 	Piece piece = makeColoredPiece(pt, who);
 
 	BB_wb[who] ^= toBB(sq);
@@ -448,15 +471,20 @@ void Position::removePiece(const Square sq, const PieceType pt, const Color who)
 	pieceSquares[piece][idx] = pieceSquares[piece][pieceCounts[piece] - 1];
 	pieceSquares[piece][pieceCounts[piece] - 1] = SQNONE;
 	--pieceCounts[piece];
+
+	state->key ^= hashing::squareKey(sq, piece);
 }
 
 void Position::addPiece(const Square sq, const PieceType pt, const Color who) {
+	assert(pt != PIECENONE);
 	Piece piece = makeColoredPiece(pt, who);
 
 	BB_wb[who] |= toBB(sq);
 	BB_pieces[pt] |= toBB(sq);
 
 	pieceSquares[piece][pieceCounts[piece]++] = sq;
+
+	state->key ^= hashing::squareKey(sq, piece);
 }
 
 void Position::makeMove(const Move& m, State& newState) {
@@ -489,6 +517,8 @@ void Position::makeMove(const Move& m, State& newState) {
 		// Check if it was a double push -> update enPassant state.
 		if (distance(originSquare, destinationSquare) >= 2) {
 			state->enPassant = enPassantToSquare(destinationSquare, player);
+
+			state->key ^= hashing::enpassantKey(toFile(state->enPassant));
 		}
 
 		// Check for promotion.
@@ -506,6 +536,12 @@ void Position::makeMove(const Move& m, State& newState) {
 
 	// If king move, then remove castling rights.
 	if (movedPiece == KING) {
+		if (state->canCastleSide(SCastling::K, player))
+			state->key ^= hashing::castlingKey((short)toCastling(SCastling::K, player));
+
+		if (state->canCastleSide(SCastling::Q, player))
+			state->key ^= hashing::castlingKey((short)toCastling(SCastling::Q, player));
+
 		// Only the other player has his castling rights.
 		state->castlingRights &= 0b11 << (2 * (short)!player);
 
@@ -522,22 +558,26 @@ void Position::makeMove(const Move& m, State& newState) {
 
 	// Remove castling rights for the appropriate origin square.
 	if (movedPiece == ROOK) {
-		if (originSquare == castlingRookOrigin(player, SCastling::K)) {
+		if (originSquare == castlingRookOrigin(player, SCastling::K) && state->canCastleSide(SCastling::K, player)) {
 			state->castlingRights &= ~((short)SCastling::K << 2 * (short)player);
+			state->key ^= hashing::castlingKey((short)toCastling(SCastling::K, player));
 		}
 
-		if (originSquare == castlingRookOrigin(player, SCastling::Q)) {
+		if (originSquare == castlingRookOrigin(player, SCastling::Q) && state->canCastleSide(SCastling::Q, player)) {
 			state->castlingRights &= ~((short)SCastling::Q << 2 * (short)player);
+			state->key ^= hashing::castlingKey((short)toCastling(SCastling::Q, player));
 		}
 	}
 
 	// Remove castling for the enemy if one of the enemy rook squares is "captured".
-	if (destinationSquare == castlingRookOrigin(!player, SCastling::K)) {
+	if (destinationSquare == castlingRookOrigin(!player, SCastling::K) && state->canCastleSide(SCastling::K, !player)) {
 		state->castlingRights &= ~((short)SCastling::K << 2 * (short)!player);
+		state->key ^= hashing::castlingKey((short)toCastling(SCastling::K, !player));
 	}
 
-	if (destinationSquare == castlingRookOrigin(!player, SCastling::Q)) {
+	if (destinationSquare == castlingRookOrigin(!player, SCastling::Q) && state->canCastleSide(SCastling::Q, !player)) {
 		state->castlingRights &= ~((short)SCastling::Q << 2 * (short)!player);
+		state->key ^= hashing::castlingKey((short)toCastling(SCastling::Q, !player));
 	}
 
 	// TODO assert that there is actually a piece standing on originSquare and no piece on destinationSquare.
@@ -548,6 +588,7 @@ void Position::makeMove(const Move& m, State& newState) {
 
 	state->capturedPiece = capturedPiece;
 	player = !player;
+	state->key ^= hashing::COLORKEY;
 
 	++state->ply;
 
@@ -724,6 +765,8 @@ void Position::updateRepetition() {
 		
 	}
 }
+
+HashKey Position::getKey() const { return state->key; }
 
 std::string Position::toFen() const {
 	std::string result = "";

@@ -6,6 +6,7 @@
 #include "position.h"
 #include "ioutil.h"
 #include "evaluation.h"
+#include "hashing.h"
 #include <random>
 #include <iostream>
 #include <string>
@@ -17,6 +18,8 @@ namespace n_search {
 	using Seconds = typename std::chrono::seconds;
 	using TimePoint = typename std::chrono::steady_clock::time_point;
 	using Clock = typename std::chrono::steady_clock;
+
+	extern hashing::HashTable<hashing::DEPTHHIGH> ttTable;
 
 	enum class SearchType {
 		PERFT, NORMAL

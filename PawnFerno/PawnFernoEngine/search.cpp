@@ -1,6 +1,8 @@
 #include "search.h"
 
 namespace n_search {
+	hashing::HashTable<hashing::DEPTHHIGH> ttTable(1000000UL);
+
 	SearchResult search(Search* s, int depth, int alpha, int beta, int colorCoeff) {
 		Position& pos = *(s->pos);
 		SearchResult res = EMPTYRESULT;
@@ -12,6 +14,13 @@ namespace n_search {
 			res.m_score = colorCoeff * s->pos->static_eval();
 			return res;
 		}
+
+		/*hashing::SearchNode& ttHit = ttTable.get(pos.getKey());  // Try to get a hit.
+		if (ttHit) {
+			if (ttHit.depth < depth) {
+				res.m_nodes = 1; res.m_score = ttHit.posScore; res.m_move = ttHit.bestMove; res;
+			}
+		}*/
 
 		auto moveList = pos.getLegalMovesAuto();
 		pos.sortMoves(moveList);  // circa 25% speedup!

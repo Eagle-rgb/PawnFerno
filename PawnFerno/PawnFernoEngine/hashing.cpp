@@ -43,34 +43,30 @@ namespace hashing {
 
 	// Zobrist
 
-
 	// HashTable
-	template <ReplacementScheme R>
-	HashTable<R>::HashTable(uint64_t sizeKB) {
-		this->tableSize = sizeKB * 1000 / sizeof SearchNode;
-		table = new SearchNode[tableSize];
-	}
-
-	template <ReplacementScheme R>
-	HashTable<R>::~HashTable() {
-		delete[] table;
-	}
-
-	template <ReplacementScheme R>
-	SearchNode HashTable<R>::lookup(HashKey key) {
-		return table[key % tableSize];
-	}
-
 	template <>
 	bool HashTable<ALWAYS>::add(SearchNode data, HashKey key) {
-		bool active = lookup(key).active;
-		
-		table[key % tableSize] = data;
+		bool active = (*this)[key].active;
+
+		(*this)[key] = data;
 		return active;
 	}
 
-	template <ReplacementScheme R>
-	SearchNode HashTable<R>::get(HashKey key) {
-		return lookup(key);
+	template <>
+	bool HashTable<DEPTHHIGH>::add(SearchNode data, HashKey key) {
+		auto& entry = (*this)[key];
+
+		if (!entry.active) {
+			(*this)[key] = data;
+			return false;
+		}
+
+		// active. Check if this depth is higher
+		if (entry.depth <= data.depth) {
+			(*this)[key] = data;
+			return true;
+		}
+
+		return false;
 	}
 }
